@@ -1,0 +1,45 @@
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE,
+    rol VARCHAR(30) NOT NULL DEFAULT 'integrante',
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS hogares (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS miembros_hogar (
+    id SERIAL PRIMARY KEY,
+    hogar_id INTEGER NOT NULL REFERENCES hogares(id) ON DELETE CASCADE,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    UNIQUE(hogar_id, usuario_id)
+);
+
+CREATE TABLE IF NOT EXISTS tareas (
+    id SERIAL PRIMARY KEY,
+    hogar_id INTEGER NOT NULL REFERENCES hogares(id) ON DELETE CASCADE,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    puntos INTEGER NOT NULL DEFAULT 0,
+    completada BOOLEAN NOT NULL DEFAULT FALSE,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS asignaciones_tarea (
+    id SERIAL PRIMARY KEY,
+    tarea_id INTEGER NOT NULL REFERENCES tareas(id) ON DELETE CASCADE,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    UNIQUE(tarea_id, usuario_id)
+);
+
+CREATE TABLE IF NOT EXISTS recompensas (
+    id SERIAL PRIMARY KEY,
+    hogar_id INTEGER NOT NULL REFERENCES hogares(id) ON DELETE CASCADE,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    costo_puntos INTEGER NOT NULL DEFAULT 0
+);
