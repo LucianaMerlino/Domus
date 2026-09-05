@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
     obtenerAdmin,
     obtenerTareas,
@@ -11,6 +12,9 @@ function Admin({ id }) {
 
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
+
+    const [errorTitulo, setErrorTitulo] = useState("");
+    const [errorDescripcion, setErrorDescripcion] = useState("");
 
     const [error, setError] = useState(null);
     const [mensaje, setMensaje] = useState(null);
@@ -35,13 +39,42 @@ function Admin({ id }) {
     async function manejarCrearTarea(event) {
         event.preventDefault();
 
+        // Limpiamos mensajes anteriores
         setError(null);
         setMensaje(null);
+        setErrorTitulo("");
+        setErrorDescripcion("");
+
+        let formularioValido = true;
+
+        // Validación del título
+        if (titulo.trim() === "") {
+            setErrorTitulo("El título es un campo obligatorio");
+            formularioValido = false;
+        } else if (titulo.length > 100) {
+            setErrorTitulo(
+                "El título no puede superar los 100 caracteres"
+            );
+            formularioValido = false;
+        }
+
+        // Validación de la descripción
+        if (descripcion.length > 500) {
+            setErrorDescripcion(
+                "La descripción no puede superar los 500 caracteres"
+            );
+            formularioValido = false;
+        }
+
+        // Si hay errores, no enviamos el formulario
+        if (!formularioValido) {
+            return;
+        }
 
         try {
             const nuevaTarea = await crearTarea({
-                nombre: titulo,
-                descripcion: descripcion
+                nombre: titulo.trim(),
+                descripcion: descripcion.trim()
             });
 
             setTareas((tareasActuales) => [
@@ -79,7 +112,9 @@ function Admin({ id }) {
 
             <form onSubmit={manejarCrearTarea}>
 
+                {/* TÍTULO */}
                 <div className="form-group">
+
                     <label htmlFor="titulo">
                         Título
                     </label>
@@ -88,20 +123,34 @@ function Admin({ id }) {
                         id="titulo"
                         type="text"
                         value={titulo}
-                        onChange={(event) =>
-                            setTitulo(event.target.value)
-                        }
+                        onChange={(event) => {
+                            setTitulo(event.target.value);
+
+                            // Quitamos el error mientras escribe
+                            if (event.target.value.trim() !== "") {
+                                setErrorTitulo("");
+                            }
+                        }}
                         maxLength={100}
                         placeholder="Ingresá el título de la tarea"
-                        required
+                        className={errorTitulo ? "input-error" : ""}
                     />
 
                     <small>
                         {titulo.length}/100 caracteres
                     </small>
+
+                    {errorTitulo && (
+                        <p className="mensaje-error">
+                            {errorTitulo}
+                        </p>
+                    )}
+
                 </div>
 
+                {/* DESCRIPCIÓN */}
                 <div className="form-group">
+
                     <label htmlFor="descripcion">
                         Descripción
                     </label>
@@ -109,17 +158,33 @@ function Admin({ id }) {
                     <textarea
                         id="descripcion"
                         value={descripcion}
-                        onChange={(event) =>
-                            setDescripcion(event.target.value)
-                        }
+                        onChange={(event) => {
+                            setDescripcion(event.target.value);
+
+                            if (event.target.value.length <= 500) {
+                                setErrorDescripcion("");
+                            }
+                        }}
                         maxLength={500}
                         placeholder="Ingresá una descripción (opcional)"
                         rows={5}
+                        className={
+                            errorDescripcion
+                                ? "input-error"
+                                : ""
+                        }
                     />
 
                     <small>
                         {descripcion.length}/500 caracteres
                     </small>
+
+                    {errorDescripcion && (
+                        <p className="mensaje-error">
+                            {errorDescripcion}
+                        </p>
+                    )}
+
                 </div>
 
                 <button type="submit">
@@ -148,12 +213,16 @@ function Admin({ id }) {
                 <p>No hay tareas creadas.</p>
             ) : (
                 <div className="lista-tareas">
+
                     {tareas.map((tarea) => (
                         <div
                             className="tarea"
                             key={tarea.id}
                         >
-                            <h3>{tarea.nombre}</h3>
+
+                            <h3>
+                                {tarea.nombre}
+                            </h3>
 
                             <p>
                                 {tarea.descripcion ||
@@ -163,8 +232,10 @@ function Admin({ id }) {
                             <span>
                                 Estado: {tarea.estado}
                             </span>
+
                         </div>
                     ))}
+
                 </div>
             )}
 
