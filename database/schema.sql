@@ -22,11 +22,13 @@ CREATE TABLE IF NOT EXISTS miembros_hogar (
 CREATE TABLE IF NOT EXISTS tareas (
     id SERIAL PRIMARY KEY,
     hogar_id INTEGER NOT NULL REFERENCES hogares(id) ON DELETE CASCADE,
-    nombre VARCHAR(150) NOT NULL,
-    descripcion TEXT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(500),
     puntos INTEGER NOT NULL DEFAULT 0,
+    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente',
     completada BOOLEAN NOT NULL DEFAULT FALSE,
-    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(hogar_id, nombre)
 );
 
 CREATE TABLE IF NOT EXISTS asignaciones_tarea (
