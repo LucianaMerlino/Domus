@@ -211,7 +211,7 @@ function Admin({ id }) {
             <h2>Tareas</h2>
 
             {tareas.length === 0 ? (
-                <p>No hay tareas creadas.</p>
+                <p>No hay tareas pendientes.</p>
             ) : (
                 <div className="lista-tareas">
 
