@@ -11,8 +11,19 @@ export async function obtenerAdmin(id) {
 }
 
 // Obtener todas las tareas
-export async function obtenerTareas() {
-    const respuesta = await fetch(`${API_URL}/tasks`);
+export async function obtenerTareas({ estado, asignado, orden } = {}) {
+    const parametros = new URLSearchParams();
+
+    if (estado) parametros.append("estado", estado);
+    if (asignado) parametros.append("asignado", asignado);
+    if (orden) parametros.append("orden", orden);
+
+    const query = parametros.toString();
+
+    // Si no hay filtros queda IGUAL que antes como -> fetch(`${API_URL}/tasks`)
+    const url = query ? `${API_URL}/tasks?${query}` : `${API_URL}/tasks`;
+
+    const respuesta = await fetch(url);
 
     if (!respuesta.ok) {
         throw new Error("No se pudieron obtener las tareas");
@@ -38,4 +49,19 @@ export async function crearTarea(tarea) {
     }
 
     return datos;
+}
+
+//Eliminar una tarea
+export async function eliminarTarea(id) {
+  const respuesta = await fetch(`${API_URL}/tasks/${id}`, {
+    method: "DELETE"
+  });
+
+  const datos = await respuesta.json();
+
+  if (!respuesta.ok) {
+    throw new Error(datos.error || "No se pudo eliminar la tarea");
+  }
+
+  return datos;
 }

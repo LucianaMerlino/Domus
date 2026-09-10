@@ -45,3 +45,7 @@ CREATE TABLE IF NOT EXISTS recompensas (
     descripcion TEXT,
     costo_puntos INTEGER NOT NULL DEFAULT 0
 );
+
+ALTER TABLE tareas
+ADD COLUMN IF NOT EXISTS asignado_a VARCHAR(100)
+;
