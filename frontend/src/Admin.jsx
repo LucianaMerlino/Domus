@@ -4,17 +4,27 @@ import "./App.css";
 import {
     obtenerAdmin,
     obtenerTareas,
+    obtenerMiembros,
     crearTarea,
     eliminarTarea
 } from "./api";
 
+// Fallback si el admin todavía no tiene un hogar asignado
+const HOGAR_POR_DEFECTO = 1;
+
 function Admin({ id }) {
     const [admin, setAdmin] = useState(null);
+    const [hogarId, setHogarId] = useState(null);
     const [tareas, setTareas] = useState([]);
+    const [miembros, setMiembros] = useState([]);
     const [tareaAEliminar, setTareaAEliminar] = useState(null);
+
+    // Modal de creación de tarea
+    const [modalCrearAbierto, setModalCrearAbierto] = useState(false);
 
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
+    const [asignadoNuevo, setAsignadoNuevo] = useState("");
 
     const [puntos, setPuntos] = useState("");
     const [errorPuntos, setErrorPuntos] = useState("");
@@ -31,29 +41,67 @@ function Admin({ id }) {
     const [orden, setOrden] = useState("");
 
     useEffect(() => {
+        // Primero el admin: de ahí sale a qué hogar pertenece
         obtenerAdmin(id)
-            .then(setAdmin)
-            .catch((error) => setError(error.message));
+            .then((datosAdmin) => {
+                setAdmin(datosAdmin);
 
-        cargarTareas();
+                const hogarDelAdmin = datosAdmin.hogar_id ?? HOGAR_POR_DEFECTO;
+                setHogarId(hogarDelAdmin);
+
+                // Solo los miembros de ese hogar
+                return obtenerMiembros(hogarDelAdmin);
+            })
+            .then(setMiembros)
+            .catch((error) => setError(error.message));
     }, [id]);
 
-    // Se recarga cada vez que cambia un filtro
+    // Se recarga al saber el hogar y cada vez que cambia un filtro
     useEffect(() => {
-        cargarTareas();
-    }, [estado, asignado, orden]);
-
-    async function cargarTareas() {
-        try {
-            const datos = await obtenerTareas({
-                estado: estado !== "Todos" ? estado : undefined,
-                asignado: asignado !== "Todos" ? asignado : undefined,
-                orden: orden || undefined
-            });
-            setTareas(datos);
-        } catch (error) {
-            setError(error.message);
+        if (hogarId == null) {
+            return;
         }
+
+        let cancelado = false;
+
+        obtenerTareas({
+            hogar: hogarId,
+            estado: estado !== "Todos" ? estado : undefined,
+            asignado: asignado !== "Todos" ? asignado : undefined,
+            orden: orden || undefined
+        })
+            .then((datos) => {
+                if (!cancelado) {
+                    setTareas(datos);
+                }
+            })
+            .catch((error) => {
+                if (!cancelado) {
+                    setError(error.message);
+                }
+            });
+
+        return () => {
+            cancelado = true;
+        };
+    }, [hogarId, estado, asignado, orden]);
+
+    // Abre el modal siempre vacío (criterio de aceptación)
+    function abrirModalCrear() {
+        setTitulo("");
+        setDescripcion("");
+        setAsignadoNuevo("");
+        setPuntos("");
+        setErrorTitulo("");
+        setErrorDescripcion("");
+        setErrorPuntos("");
+        setError(null);
+        setMensaje(null);
+        setModalCrearAbierto(true);
+    }
+
+    function cerrarModalCrear() {
+        setModalCrearAbierto(false);
     }
 
     async function manejarCrearTarea(event) {
@@ -103,10 +151,11 @@ function Admin({ id }) {
         }
 
         try {
-            const nuevaTarea = await crearTarea({
+            const nuevaTarea = await crearTarea(hogarId ?? HOGAR_POR_DEFECTO, {
                 nombre: titulo.trim(),
                 descripcion: descripcion.trim(),
-                puntos: puntos !== "" ? Number(puntos) : 0
+                puntos: puntos !== "" ? Number(puntos) : 0,
+                asignado_a: asignadoNuevo !== "" ? asignadoNuevo : null
             });
 
             setTareas((tareasActuales) => [
@@ -116,8 +165,10 @@ function Admin({ id }) {
 
             setTitulo("");
             setDescripcion("");
+            setAsignadoNuevo("");
             setPuntos("");
 
+            setModalCrearAbierto(false);
             setMensaje("Tarea creada correctamente");
         } catch (error) {
             setError(error.message);
@@ -181,137 +232,27 @@ function Admin({ id }) {
 
             <hr />
 
-            <h2>Crear nueva tarea</h2>
-
-            <form onSubmit={manejarCrearTarea}>
-
-                {/* TÍTULO */}
-                <div className="form-group">
-
-                    <label htmlFor="titulo">
-                        Título
-                    </label>
-
-                    <input
-                        id="titulo"
-                        type="text"
-                        value={titulo}
-                        onChange={(event) => {
-                            setTitulo(event.target.value);
-
-                            // Quitamos el error mientras escribe
-                            if (event.target.value.trim() !== "") {
-                                setErrorTitulo("");
-                            }
-                        }}
-                        maxLength={100}
-                        placeholder="Ingresá el título de la tarea"
-                        className={errorTitulo ? "input-error" : ""}
-                    />
-
-                    <small>
-                        {titulo.length}/100 caracteres
-                    </small>
-
-                    {errorTitulo && (
-                        <p className="mensaje-error">
-                            {errorTitulo}
-                        </p>
-                    )}
-
-                </div>
-
-                {/* DESCRIPCIÓN */}
-                <div className="form-group">
-
-                    <label htmlFor="descripcion">
-                        Descripción
-                    </label>
-
-                    <textarea
-                        id="descripcion"
-                        value={descripcion}
-                        onChange={(event) => {
-                            setDescripcion(event.target.value);
-
-                            if (event.target.value.length <= 500) {
-                                setErrorDescripcion("");
-                            }
-                        }}
-                        maxLength={500}
-                        placeholder="Ingresá una descripción (opcional)"
-                        rows={5}
-                        className={
-                            errorDescripcion
-                                ? "input-error"
-                                : ""
-                        }
-                    />
-
-                    <small>
-                        {descripcion.length}/500 caracteres
-                    </small>
-
-                    {errorDescripcion && (
-                        <p className="mensaje-error">
-                            {errorDescripcion}
-                        </p>
-                    )}
-
-                </div>
-                
-                {/* PUNTOS */}
-                <div className="form-group">
-
-                    <label htmlFor="puntos">
-                        Puntos
-                    </label>
-
-                    <input
-                        id="puntos"
-                        type="number"
-                        min="0"
-                        value={puntos}
-                        onChange={(event) => {
-                            setPuntos(event.target.value);
-                            setErrorPuntos("");
-                        }}
-                        placeholder="0"
-                        className={errorPuntos ? "input-error" : ""}
-                    />
-
-                    {errorPuntos && (
-                        <p className="mensaje-error">
-                            {errorPuntos}
-                        </p>
-                    )}
-
-                </div>
-
-                {/* Mover este boton al listado de las tareas*/}
-                <button type="submit">
-                    Crear tarea
-                </button>
-
-            </form>
-
             {mensaje && (
                 <p className="mensaje-exito">
                     {mensaje}
                 </p>
             )}
 
-            {error && (
+            {error && !modalCrearAbierto && (
                 <p className="mensaje-error">
                     {error}
                 </p>
             )}
 
-            <hr />
-
             <div className="tareas-hogar-container">
 
-                <h2>Tareas del hogar</h2>
+                <div className="tareas-hogar-header">
+                    <h2>Tareas del hogar</h2>
+
+                    <button type="button" onClick={abrirModalCrear}>
+                        Nueva tarea
+                    </button>
+                </div>
 
                 <div className="filtros-tareas">
 
@@ -402,6 +343,168 @@ function Admin({ id }) {
 
             </div>
 
+            {modalCrearAbierto && (
+                <div className="modal-fondo">
+                    <div className="modal modal-crear">
+
+                        <h2>Nueva tarea</h2>
+
+                        <form onSubmit={manejarCrearTarea}>
+
+                            {/* TÍTULO */}
+                            <div className="form-group">
+
+                                <label htmlFor="titulo">
+                                    Título
+                                </label>
+
+                                <input
+                                    id="titulo"
+                                    type="text"
+                                    value={titulo}
+                                    onChange={(event) => {
+                                        setTitulo(event.target.value);
+
+                                        // Quitamos el error mientras escribe
+                                        if (event.target.value.trim() !== "") {
+                                            setErrorTitulo("");
+                                        }
+                                    }}
+                                    maxLength={100}
+                                    placeholder="Ingresá el título de la tarea"
+                                    className={errorTitulo ? "input-error" : ""}
+                                />
+
+                                <small>
+                                    {titulo.length}/100 caracteres
+                                </small>
+
+                                {errorTitulo && (
+                                    <p className="mensaje-error">
+                                        {errorTitulo}
+                                    </p>
+                                )}
+
+                            </div>
+
+                            {/* DESCRIPCIÓN */}
+                            <div className="form-group">
+
+                                <label htmlFor="descripcion">
+                                    Descripción
+                                </label>
+
+                                <textarea
+                                    id="descripcion"
+                                    value={descripcion}
+                                    onChange={(event) => {
+                                        setDescripcion(event.target.value);
+
+                                        if (event.target.value.length <= 500) {
+                                            setErrorDescripcion("");
+                                        }
+                                    }}
+                                    maxLength={500}
+                                    placeholder="Ingresá una descripción (opcional)"
+                                    rows={4}
+                                    className={
+                                        errorDescripcion
+                                            ? "input-error"
+                                            : ""
+                                    }
+                                />
+
+                                <small>
+                                    {descripcion.length}/500 caracteres
+                                </small>
+
+                                {errorDescripcion && (
+                                    <p className="mensaje-error">
+                                        {errorDescripcion}
+                                    </p>
+                                )}
+
+                            </div>
+
+                            {/* MIEMBRO ASIGNADO */}
+                            <div className="form-group">
+
+                                <label htmlFor="asignado-nuevo">
+                                    Miembro asignado
+                                </label>
+
+                                <select
+                                    id="asignado-nuevo"
+                                    value={asignadoNuevo}
+                                    onChange={(event) => setAsignadoNuevo(event.target.value)}
+                                >
+                                    <option value="">Sin asignar</option>
+
+                                    {miembros.map((miembro) => (
+                                        <option
+                                            key={miembro.id}
+                                            value={miembro.nombre}
+                                        >
+                                            {miembro.nombre}
+                                            {miembro.rol === "admin" ? " (admin)" : ""}
+                                        </option>
+                                    ))}
+                                </select>
+
+                            </div>
+
+                            {/* PUNTOS */}
+                            <div className="form-group">
+
+                                <label htmlFor="puntos">
+                                    Puntos que otorga
+                                </label>
+
+                                <input
+                                    id="puntos"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={puntos}
+                                    onChange={(event) => {
+                                        setPuntos(event.target.value);
+                                        setErrorPuntos("");
+                                    }}
+                                    placeholder="0"
+                                    className={errorPuntos ? "input-error" : ""}
+                                />
+
+                                {errorPuntos && (
+                                    <p className="mensaje-error">
+                                        {errorPuntos}
+                                    </p>
+                                )}
+
+                            </div>
+
+                            {error && (
+                                <p className="mensaje-error">
+                                    {error}
+                                </p>
+                            )}
+
+                            <div className="modal-botones">
+                                <button
+                                    type="button"
+                                    onClick={cerrarModalCrear}>
+                                    Cancelar
+                                </button>
+                                <button type="submit">
+                                    Guardar
+                                </button>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+            )}
+
             {tareaAEliminar && (
                 <div className="modal-fondo">
                     <div className="modal">
@@ -427,7 +530,7 @@ function Admin({ id }) {
                 </div>
             )}
         </div>
-        
+
 
     );
 }
