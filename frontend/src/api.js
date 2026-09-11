@@ -10,10 +10,22 @@ export async function obtenerAdmin(id) {
     return respuesta.json();
 }
 
+// Obtener los miembros de un hogar
+export async function obtenerMiembros(hogarId) {
+    const respuesta = await fetch(`${API_URL}/hogares/${hogarId}/miembros`);
+
+    if (!respuesta.ok) {
+        throw new Error("No se pudieron obtener los miembros del hogar");
+    }
+
+    return respuesta.json();
+}
+
 // Obtener todas las tareas
-export async function obtenerTareas({ estado, asignado, orden } = {}) {
+export async function obtenerTareas({ estado, asignado, orden, hogar } = {}) {
     const parametros = new URLSearchParams();
 
+    if (hogar) parametros.append("hogar", hogar);
     if (estado) parametros.append("estado", estado);
     if (asignado) parametros.append("asignado", asignado);
     if (orden) parametros.append("orden", orden);
@@ -32,9 +44,9 @@ export async function obtenerTareas({ estado, asignado, orden } = {}) {
     return respuesta.json();
 }
 
-// Crear una nueva tarea
-export async function crearTarea(tarea) {
-    const respuesta = await fetch(`${API_URL}/tasks`, {
+// Crear una nueva tarea dentro de un hogar
+export async function crearTarea(hogarId, tarea) {
+    const respuesta = await fetch(`${API_URL}/hogares/${hogarId}/tareas`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

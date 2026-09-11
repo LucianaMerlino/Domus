@@ -368,6 +368,19 @@ button {
   margin-top: 0;
 }
 
+/* Encabezado de la card: título + botón "Nueva tarea" */
+.tareas-hogar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tareas-hogar-header h2 {
+  margin: 0;
+}
+
 /* ========================================= */
 /*                  FILTROS                   */
 /* ========================================= */
@@ -518,6 +531,36 @@ button {
   border-radius: 10px;
   width: 400px;
   text-align: center;
+}
+
+/* Modal de creación de tarea: formulario alineado a la izquierda */
+.modal-crear {
+  width: 440px;
+  max-width: 90vw;
+  text-align: left;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-crear h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.modal-crear .form-group {
+  margin-bottom: 16px;
+}
+
+.modal-crear select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #222222;
+  font-family: inherit;
 }
 
 .modal-botones {

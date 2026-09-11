@@ -22,7 +22,20 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
     try {
         const result = await pool.query(
-            "SELECT id, nombre, email, rol FROM usuarios WHERE id = $1 AND rol = 'admin'",
+            `SELECT
+                u.id,
+                u.nombre,
+                u.email,
+                u.rol,
+                (
+                    SELECT m.hogar_id
+                    FROM miembros_hogar m
+                    WHERE m.usuario_id = u.id
+                    ORDER BY m.hogar_id
+                    LIMIT 1
+                ) AS hogar_id
+             FROM usuarios u
+             WHERE u.id = $1 AND u.rol = 'admin'`,
             [req.params.id]
         );
 

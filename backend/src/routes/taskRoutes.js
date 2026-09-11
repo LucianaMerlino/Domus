@@ -5,11 +5,18 @@ const pool = require("../config/database");
 // Obtener todas las tareas (con filtros y orden)
 router.get("/", async (req, res) => {
     try {
-        const { estado, asignado, orden } = req.query;
+        const { estado, asignado, orden, hogar } = req.query;
 
         const condiciones = [];
         const valores = [];
         let indice = 1;
+
+        // Filtro por hogar
+        if (hogar) {
+            condiciones.push(`hogar_id = $${indice}`);
+            valores.push(hogar);
+            indice++;
+        }
 
         // Filtro por estado
         if (estado && estado !== "todas") {
@@ -60,10 +67,19 @@ router.get("/", async (req, res) => {
     }
 });
 
-// Crear una nueva tarea
-router.post("/", async (req, res) => {
+// Lógica compartida para crear una tarea dentro de un hogar.
+// La usan POST /api/tasks (hogar de prueba) y POST /api/hogares/:id/tareas.
+async function crearTareaEnHogar(hogarId, cuerpo, res) {
     try {
-        const { nombre, descripcion, puntos } = req.body;
+        const hogarNumero = Number(hogarId);
+
+        if (!Number.isInteger(hogarNumero) || hogarNumero <= 0) {
+            return res.status(400).json({
+                error: "El hogar indicado no es válido"
+            });
+        }
+
+        const { nombre, descripcion, puntos, asignado_a } = cuerpo;
 
         // El título es obligatorio
         if (!nombre || nombre.trim() === "") {
@@ -88,7 +104,7 @@ router.post("/", async (req, res) => {
             });
         }
 
-        // Validación de puntos
+        // Validación de puntos (mínimo 0, entero)
         let puntosLimpios = 0;
 
         if (puntos !== undefined && puntos !== null && puntos !== "") {
@@ -103,20 +119,24 @@ router.post("/", async (req, res) => {
             puntosLimpios = puntosNumero;
         }
 
-        // Hogar de prueba
-        const hogarId = 1;
+        // Miembro asignado (opcional): por ahora siempre llega vacío -> null
+        const asignadoLimpio =
+            typeof asignado_a === "string" && asignado_a.trim() !== ""
+                ? asignado_a.trim()
+                : null;
 
         const resultado = await pool.query(
             `INSERT INTO tareas
-                (hogar_id, nombre, descripcion, puntos, estado)
+                (hogar_id, nombre, descripcion, puntos, estado, asignado_a)
              VALUES
-                ($1, $2, $3, $4, 'Pendiente')
-             RETURNING id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, creado_en`,
+                ($1, $2, $3, $4, 'Pendiente', $5)
+             RETURNING id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, completada, creado_en`,
             [
-                hogarId,
+                hogarNumero,
                 nombreLimpio,
                 descripcion ? descripcion.trim() : null,
-                puntosLimpios
+                puntosLimpios,
+                asignadoLimpio
             ]
         );
 
@@ -125,10 +145,17 @@ router.post("/", async (req, res) => {
     } catch (error) {
         console.error("Error al crear tarea:", error);
 
-        // Título duplicado
+        // Título duplicado en el mismo hogar (UNIQUE(hogar_id, nombre))
         if (error.code === "23505") {
             return res.status(400).json({
                 error: "Ya existe una tarea con ese título"
+            });
+        }
+
+        // hogar_id inexistente (violación de clave foránea)
+        if (error.code === "23503") {
+            return res.status(400).json({
+                error: "El hogar indicado no existe"
             });
         }
 
@@ -136,6 +163,12 @@ router.post("/", async (req, res) => {
             error: "No se pudo crear la tarea"
         });
     }
+}
+
+// Crear una nueva tarea en el hogar de prueba (se mantiene por compatibilidad)
+router.post("/", (req, res) => {
+    const hogarDePrueba = 1;
+    crearTareaEnHogar(hogarDePrueba, req.body, res);
 });
 
 // Eliminar una tarea
@@ -168,3 +201,4 @@ router.delete("/:id", async (req, res) => {
 });
 
 module.exports = router;
+module.exports.crearTareaEnHogar = crearTareaEnHogar;
