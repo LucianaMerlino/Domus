@@ -436,7 +436,7 @@ button {
 
 .fila-tarea {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 16px 20px;
   border-bottom: 1px solid #232326;
 }
@@ -450,6 +450,7 @@ button {
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-width: 0;
 }
 
 .fila-datos {
@@ -467,6 +468,9 @@ button {
 .fila-descripcion {
   font-size: 14px;
   color: #8a8a8f;
+
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .fila-asignado {
@@ -475,6 +479,7 @@ button {
   min-width: 110px;
   text-align: center;
   white-space: nowrap;
+  padding-top: 2px;
 }
 
 /* ========================================= */
@@ -487,6 +492,7 @@ button {
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
+  margin-top: 2px;
 }
 
 .badge-estado.pendiente {
@@ -507,6 +513,7 @@ button {
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
+  margin-top: 2px;
 }
 
 /* ========================================= */
@@ -581,4 +588,5 @@ button {
   background: none;
   cursor: pointer;
   font-size: 20px;
+  padding-top: 2px;
 }
