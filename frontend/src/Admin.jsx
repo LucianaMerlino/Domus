@@ -121,9 +121,10 @@ function Admin({ id }) {
             setErrorTitulo("El título es un campo obligatorio");
             formularioValido = false;
         } else if (titulo.length > 100) {
-            setErrorTitulo(
-                "El título no puede superar los 100 caracteres"
-            );
+            setErrorTitulo("El título no puede superar los 100 caracteres");
+            formularioValido = false;
+        } else if (!/^[\p{L}\s'".,]+$/u.test(titulo)) {
+            setErrorTitulo("El título solo puede contener letras, comillas, puntos y comas");
             formularioValido = false;
         }
 

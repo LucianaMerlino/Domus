@@ -97,6 +97,13 @@ async function crearTareaEnHogar(hogarId, cuerpo, res) {
             });
         }
 
+        // Solo letras, espacios, comillas, puntos y comas
+        if (!/^[\p{L}\s'".,]+$/u.test(nombreLimpio)) {
+            return res.status(400).json({
+                error: "El título solo puede contener letras, comillas, puntos y comas"
+            });
+        }
+
         // Máximo 500 caracteres
         if (descripcion && descripcion.length > 500) {
             return res.status(400).json({
