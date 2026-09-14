@@ -268,7 +268,6 @@ function Admin({ id }) {
                             <option value="Realizada">Realizada</option>
                         </select>
                     </div>
-
                     <div className="filtro-grupo">
                         <label htmlFor="filtro-asignado">Asignada a</label>
                         <select
@@ -278,6 +277,16 @@ function Admin({ id }) {
                         >
                             <option value="Todos">Todos</option>
                             <option value="sin_asignar">Sin asignar</option>
+
+                            {miembros.map((miembro) => (
+                                <option
+                                    key={miembro.id}
+                                    value={miembro.nombre}
+                                >
+                                    {miembro.nombre}
+                                    {miembro.rol === "admin" ? " (admin)" : ""}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
