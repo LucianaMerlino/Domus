@@ -533,6 +533,17 @@ button {
   text-align: center;
 }
 
+.modal h2 {
+  margin: -30px -30px 20px -30px;
+  padding: 16px 30px;
+  text-align: center;
+
+  background-color: #222222;
+  color: #ffffff;
+
+  border-radius: 10px 10px 0 0;
+}
+
 /* Modal de creación de tarea: formulario alineado a la izquierda */
 .modal-crear {
   width: 440px;
@@ -540,11 +551,6 @@ button {
   text-align: left;
   max-height: 90vh;
   overflow-y: auto;
-}
-
-.modal-crear h2 {
-  margin-top: 0;
-  text-align: center;
 }
 
 .modal-crear .form-group {
