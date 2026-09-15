@@ -204,9 +204,9 @@ router.put("/:id", async (req, res) => {
         }
 
         const puntosNumero = Number(puntos);
-        if (!Number.isInteger(puntosNumero) || puntosNumero <= 0) {
+        if (!Number.isInteger(puntosNumero) || puntosNumero < 0) {
             return res.status(400).json({
-                error: "Los puntos deben ser un número entero mayor a 0"
+                error: "Los puntos deben ser un número entero mayor o igual a 0"
             });
         }
 
