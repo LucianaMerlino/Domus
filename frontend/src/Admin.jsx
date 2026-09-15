@@ -151,8 +151,8 @@ function Admin({ id }) {
         }
 
         const puntosNumero = Number(puntosEdicion);
-        if (!Number.isInteger(puntosNumero) || puntosNumero <= 0) {
-            setErrorEdicion("Los puntos deben ser un número entero mayor a 0");
+        if (!Number.isInteger(puntosNumero) || puntosNumero < 0) {
+            setErrorEdicion("Los puntos deben ser un número entero mayor o igual a 0");
             return;
         }
 
@@ -688,7 +688,7 @@ function Admin({ id }) {
                                     <input
                                         id="puntos-edicion"
                                         type="number"
-                                        min="1"
+                                        min="0"
                                         step="1"
                                         value={puntosEdicion}
                                         onChange={(event) => setPuntosEdicion(event.target.value)}
