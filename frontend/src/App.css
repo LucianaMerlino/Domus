@@ -439,6 +439,7 @@ button {
   align-items: flex-start;
   padding: 16px 20px;
   border-bottom: 1px solid #232326;
+  cursor: pointer;
 }
 
 .fila-tarea:last-child {
@@ -589,4 +590,62 @@ button {
   cursor: pointer;
   font-size: 20px;
   padding-top: 2px;
+}
+
+.modal-detalle {
+  max-width: 90vw;
+}
+
+.modal-detalle form {
+  text-align: left;
+}
+
+.modal-detalle select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #222222;
+  font-family: inherit;
+}
+
+.modal-detalle button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.detalle-descripcion {
+  color: #333333;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  text-align: left;
+}
+
+.detalle-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.detalle-dato {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.detalle-etiqueta {
+  color: #666666;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.detalle-valor {
+  color: #222222;
+  font-size: 14px;
 }

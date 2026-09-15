@@ -77,3 +77,22 @@ export async function eliminarTarea(id) {
 
   return datos;
 }
+
+// Actualizar una tarea existente
+export async function actualizarTarea(id, tarea) {
+    const respuesta = await fetch(`${API_URL}/tasks/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(tarea),
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(datos.error || "No se pudo actualizar la tarea");
+    }
+
+    return datos;
+}
