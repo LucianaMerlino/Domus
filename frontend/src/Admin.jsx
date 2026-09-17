@@ -151,8 +151,8 @@ function Admin({ id }) {
         }
 
         const puntosNumero = Number(puntosEdicion);
-        if (!Number.isInteger(puntosNumero) || puntosNumero < 0) {
-            setErrorEdicion("Los puntos deben ser un número entero mayor o igual a 0");
+        if (!Number.isInteger(puntosNumero) || puntosNumero <= 0) {
+            setErrorEdicion("Los puntos deben ser un número entero mayor a 0");
             return;
         }
 
@@ -217,8 +217,8 @@ function Admin({ id }) {
         if (puntos !== "") {
             const puntosNumero = Number(puntos);
 
-            if (!Number.isInteger(puntosNumero) || puntosNumero < 0) {
-                setErrorPuntos("Los puntos deben ser un número entero mayor o igual a 0");
+            if (!Number.isInteger(puntosNumero) || puntosNumero <= 0) {
+                setErrorPuntos("Los puntos deben ser un número entero mayor a 0");
                 formularioValido = false;
             }
         }
@@ -232,7 +232,7 @@ function Admin({ id }) {
             const nuevaTarea = await crearTarea(hogarId ?? HOGAR_POR_DEFECTO, {
                 nombre: titulo.trim(),
                 descripcion: descripcion.trim(),
-                puntos: puntos !== "" ? Number(puntos) : 0,
+                puntos: puntos !== "" ? Number(puntos) : 1,
                 asignado_a: asignadoNuevo !== "" ? asignadoNuevo : null
             });
 
@@ -417,7 +417,7 @@ function Admin({ id }) {
                                 </span>
 
                                 <span className="badge-puntos">
-                                    {tarea.puntos ?? 0} pts
+                                    {tarea.puntos ?? 1} pts
                                 </span>
 
                                 <button
@@ -558,14 +558,14 @@ function Admin({ id }) {
                                 <input
                                     id="puntos"
                                     type="number"
-                                    min="0"
+                                    min="1"
                                     step="1"
                                     value={puntos}
                                     onChange={(event) => {
                                         setPuntos(event.target.value);
                                         setErrorPuntos("");
                                     }}
-                                    placeholder="0"
+                                    placeholder="1"
                                     className={errorPuntos ? "input-error" : ""}
                                 />
 
