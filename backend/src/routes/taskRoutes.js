@@ -178,6 +178,51 @@ router.post("/", (req, res) => {
     crearTareaEnHogar(hogarDePrueba, req.body, res);
 });
 
+// ======================================================
+// Marcar una tarea como realizada
+// ======================================================
+router.put("/:id/realizada", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const resultado = await pool.query(
+            `UPDATE tareas
+             SET estado = 'Realizada',
+                 completada = TRUE
+             WHERE id = $1
+             RETURNING
+                 id,
+                 hogar_id,
+                 nombre,
+                 descripcion,
+                 puntos,
+                 estado,
+                 asignado_a,
+                 completada,
+                 creado_en`,
+            [id]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                error: "No se encontró la tarea"
+            });
+        }
+
+        res.json(resultado.rows[0]);
+
+    } catch (error) {
+        console.error(
+            "Error al marcar tarea como realizada:",
+            error
+        );
+
+        res.status(500).json({
+            error: "No se pudo marcar la tarea como realizada"
+        });
+    }
+});
+
 // Actualizar una tarea existente
 router.put("/:id", async (req, res) => {
     try {
