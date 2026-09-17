@@ -96,3 +96,68 @@ export async function actualizarTarea(id, tarea) {
 
     return datos;
 }
+// ======================================================
+// Obtener perfil de usuario
+// ======================================================
+export async function obtenerPerfil(id) {
+    const respuesta = await fetch(
+        `${API_URL}/usuarios/${id}/perfil`
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.error || "No se pudo obtener el perfil"
+        );
+    }
+
+    return datos;
+}
+
+
+// ======================================================
+// Obtener tareas de un usuario
+// ======================================================
+export async function obtenerTareasUsuario(id, estado = "pendiente") {
+    const respuesta = await fetch(
+        `${API_URL}/usuarios/${id}/tareas?estado=${estado}`
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.error || "No se pudieron obtener las tareas"
+        );
+    }
+
+    return datos;
+}
+
+
+// ======================================================
+// Marcar tarea como realizada
+// ======================================================
+export async function marcarTareaRealizada(id) {
+    const respuesta = await fetch(
+        `${API_URL}/tasks/${id}/realizada`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.error ||
+            "No se pudo marcar la tarea como realizada"
+        );
+    }
+
+    return datos;
+}
