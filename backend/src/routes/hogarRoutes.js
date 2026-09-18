@@ -186,5 +186,76 @@ router.post("/:id/tareas", (req, res) => {
     crearTareaEnHogar(req.params.id, req.body, res);
 });
 
+// Eliminar un miembro del hogar
+router.delete("/:id/miembros/:usuarioId", async (req, res) => {
+    try {
+        const hogarId = Number(req.params.id);
+        const usuarioId = Number(req.params.usuarioId);
+        const { adminId } = req.body || {};
+
+        if (!Number.isInteger(hogarId) || hogarId <= 0) {
+            return res.status(400).json({
+                error: "El hogar indicado no es válido"
+            });
+        }
+
+        if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+            return res.status(400).json({
+                error: "El usuario indicado no es válido"
+            });
+        }
+
+        if (!adminId) {
+            return res.status(403).json({
+                error: "Se requiere identificar al administrador"
+            });
+        }
+
+        const administrador = await pool.query(
+            `SELECT u.id, u.rol
+             FROM miembros_hogar m
+             JOIN usuarios u ON u.id = m.usuario_id
+             WHERE m.hogar_id = $1 AND u.id = $2`,
+            [hogarId, adminId]
+        );
+
+        if (administrador.rows.length === 0 || administrador.rows[0].rol !== "admin") {
+            return res.status(403).json({
+                error: "Solo el administrador puede eliminar miembros"
+            });
+        }
+
+        if (Number(adminId) === usuarioId) {
+            return res.status(403).json({
+                error: "El administrador no puede eliminarse a sí mismo"
+            });
+        }
+
+        const resultado = await pool.query(
+            `DELETE FROM miembros_hogar
+             WHERE hogar_id = $1 AND usuario_id = $2
+             RETURNING *`,
+            [hogarId, usuarioId]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                error: "No se encontró ese miembro en el hogar"
+            });
+        }
+
+        res.json({
+            mensaje: "Miembro eliminado del hogar",
+            usuarioId
+        });
+    } catch (error) {
+        console.error("Error al eliminar miembro del hogar:", error);
+
+        res.status(500).json({
+            error: "No se pudo eliminar el miembro del hogar"
+        });
+    }
+});
+
 
 module.exports = router;

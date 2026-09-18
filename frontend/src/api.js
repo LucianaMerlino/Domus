@@ -190,3 +190,27 @@ export async function agregarMiembro(hogarId, email, adminId) {
 
     return datos;
 }
+
+// Eliminar un miembro del hogar
+export async function eliminarMiembro(hogarId, usuarioId, adminId) {
+    const respuesta = await fetch(
+        `${API_URL}/hogares/${hogarId}/miembros/${usuarioId}`,
+        {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ adminId })
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.error || "No se pudo eliminar el miembro"
+        );
+    }
+
+    return datos;
+}

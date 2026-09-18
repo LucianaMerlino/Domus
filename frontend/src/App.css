@@ -527,10 +527,15 @@ button {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
 
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.modal-fondo-confirmacion {
+  z-index: 2000;
 }
 
 .modal {
@@ -842,6 +847,21 @@ button {
   padding: 14px 24px;
 
   border-bottom: 1px solid #232326;
+}
+
+.boton-eliminar-miembro {
+  margin-left: auto;
+  padding: 8px 12px;
+  border: 1px solid #5a3d3d;
+  border-radius: 7px;
+  background-color: #2a1b1d;
+  color: #ffb0b0;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.boton-eliminar-miembro:hover {
+  background-color: #3b2427;
 }
 
 .miembro-item:last-child {

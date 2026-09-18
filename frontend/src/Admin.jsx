@@ -8,7 +8,8 @@ import {
     agregarMiembro,
     crearTarea,
     eliminarTarea,
-    actualizarTarea
+    actualizarTarea,
+    eliminarMiembro
 } from "./api";
 
 // Fallback si el admin todavía no tiene un hogar asignado
@@ -25,6 +26,7 @@ function Admin({ id }) {
     const [emailNuevoMiembro, setEmailNuevoMiembro] = useState("");
     const [errorMiembro, setErrorMiembro] = useState("");
     const [agregandoMiembro, setAgregandoMiembro] = useState(false);
+    const [miembroAEliminar, setMiembroAEliminar] = useState(null);
 
     const [tareaAEliminar, setTareaAEliminar] = useState(null);
     const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
@@ -185,6 +187,40 @@ function Admin({ id }) {
 
         } finally {
             setAgregandoMiembro(false);
+        }
+    }
+
+    function abrirConfirmacionEliminarMiembro(miembro) {
+        setMiembroAEliminar(miembro);
+    }
+
+    function cerrarConfirmacionEliminarMiembro() {
+        setMiembroAEliminar(null);
+    }
+
+    async function confirmarEliminacionMiembro() {
+        if (!miembroAEliminar) {
+            return;
+        }
+
+        try {
+            await eliminarMiembro(
+                hogarId ?? HOGAR_POR_DEFECTO,
+                miembroAEliminar.id,
+                id
+            );
+
+            setMiembros((miembrosActuales) =>
+                miembrosActuales.filter(
+                    (miembro) => miembro.id !== miembroAEliminar.id
+                )
+            );
+
+            setMiembroAEliminar(null);
+            setMensaje("Miembro eliminado del hogar");
+            setError(null);
+        } catch (error) {
+            setError(error.message);
         }
     }
 
@@ -858,6 +894,30 @@ function Admin({ id }) {
                     </div>
                 </div>
             )}
+            {miembroAEliminar && (
+                <div
+                    className="modal-fondo modal-fondo-confirmacion"
+                    onClick={cerrarConfirmacionEliminarMiembro}
+                >
+                    <div className="modal modal-confirmar-miembro" onClick={(event) => event.stopPropagation()}>
+                        <h2>¿Seguro que querés eliminar este miembro?</h2>
+
+                        <p>
+                            Vas a eliminar a "{miembroAEliminar.nombre}" del hogar.
+                        </p>
+
+                        <div className="modal-botones">
+                            <button type="button" onClick={cerrarConfirmacionEliminarMiembro}>
+                                Cancelar
+                            </button>
+                            <button type="button" onClick={confirmarEliminacionMiembro}>
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {modalMiembrosAbierto && (
             <div
                 className="modal-fondo"
@@ -1002,6 +1062,19 @@ function Admin({ id }) {
                                         </span>
 
                                     </div>
+
+                                    {admin.rol === "admin" &&
+                                        Number(miembro.id) !== Number(id) && (
+                                            <button
+                                                type="button"
+                                                className="boton-eliminar-miembro"
+                                                onClick={() => abrirConfirmacionEliminarMiembro(miembro)}
+                                                aria-label={`Eliminar a ${miembro.nombre}`}
+                                                title={`Eliminar a ${miembro.nombre}`}
+                                            >
+                                                Eliminar
+                                            </button>
+                                        )}
 
                                 </div>
 
