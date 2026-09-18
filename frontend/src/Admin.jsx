@@ -5,6 +5,7 @@ import {
     obtenerAdmin,
     obtenerTareas,
     obtenerMiembros,
+    agregarMiembro,
     crearTarea,
     eliminarTarea,
     actualizarTarea
@@ -20,6 +21,10 @@ function Admin({ id }) {
     const [miembros, setMiembros] = useState([]);
 
     const [modalMiembrosAbierto, setModalMiembrosAbierto] = useState(false);
+    const [agregarMiembroAbierto, setAgregarMiembroAbierto] = useState(false);
+    const [emailNuevoMiembro, setEmailNuevoMiembro] = useState("");
+    const [errorMiembro, setErrorMiembro] = useState("");
+    const [agregandoMiembro, setAgregandoMiembro] = useState(false);
 
     const [tareaAEliminar, setTareaAEliminar] = useState(null);
     const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
@@ -118,11 +123,69 @@ function Admin({ id }) {
     }
 
     function abrirModalMiembros() {
-    setModalMiembrosAbierto(true);
+        setModalMiembrosAbierto(true);
+        setAgregarMiembroAbierto(false);
+        setEmailNuevoMiembro("");
+        setErrorMiembro("");
     }
 
     function cerrarModalMiembros() {
-    setModalMiembrosAbierto(false);
+        setModalMiembrosAbierto(false);
+        setAgregarMiembroAbierto(false);
+        setEmailNuevoMiembro("");
+        setErrorMiembro("");
+    }
+
+    function abrirFormularioAgregarMiembro() {
+        setAgregarMiembroAbierto(true);
+        setEmailNuevoMiembro("");
+        setErrorMiembro("");
+    }
+
+    function cancelarAgregarMiembro() {
+        setAgregarMiembroAbierto(false);
+        setEmailNuevoMiembro("");
+        setErrorMiembro("");
+    }
+
+    async function manejarAgregarMiembro(event) {
+        event.preventDefault();
+
+        setErrorMiembro("");
+
+        const email = emailNuevoMiembro.trim();
+
+        if (email === "") {
+            setErrorMiembro("El email es obligatorio");
+            return;
+        }
+
+        setAgregandoMiembro(true);
+
+        try {
+            const nuevoMiembro = await agregarMiembro(
+                hogarId ?? HOGAR_POR_DEFECTO,
+                email,
+                id
+            );
+
+            // Agregamos el nuevo miembro directamente al estado.
+            // No hace falta cerrar y volver a abrir el popup.
+            setMiembros((miembrosActuales) => [
+                ...miembrosActuales,
+                nuevoMiembro
+            ]);
+
+            setEmailNuevoMiembro("");
+            setAgregarMiembroAbierto(false);
+            setErrorMiembro("");
+
+        } catch (error) {
+            setErrorMiembro(error.message);
+
+        } finally {
+            setAgregandoMiembro(false);
+        }
     }
 
     function abrirModalDetalle(tarea) {
@@ -821,7 +884,82 @@ function Admin({ id }) {
                         </button>
 
                     </div>
+                    {admin.rol === "admin" && (
+                    <div className="agregar-miembro-container">
 
+                        {!agregarMiembroAbierto ? (
+
+                            <button
+                                type="button"
+                                className="boton-agregar-miembro"
+                                onClick={abrirFormularioAgregarMiembro}
+                            >
+                                + Agregar miembro
+                            </button>
+
+                        ) : (
+
+                            <form
+                                className="form-agregar-miembro"
+                                onSubmit={manejarAgregarMiembro}
+                            >
+
+                                <label htmlFor="email-nuevo-miembro">
+                                    Email del usuario
+                                </label>
+
+                                <input
+                                    id="email-nuevo-miembro"
+                                    type="email"
+                                    value={emailNuevoMiembro}
+                                    onChange={(event) => {
+                                        setEmailNuevoMiembro(
+                                            event.target.value
+                                        );
+
+                                        if (errorMiembro) {
+                                            setErrorMiembro("");
+                                        }
+                                    }}
+                                    placeholder="ejemplo@gmail.com"
+                                    autoFocus
+                                />
+
+                                {errorMiembro && (
+                                    <p className="mensaje-error-miembro">
+                                        {errorMiembro}
+                                    </p>
+                                )}
+
+                                <div className="acciones-agregar-miembro">
+
+                                    <button
+                                        type="button"
+                                        className="boton-cancelar-miembro"
+                                        onClick={cancelarAgregarMiembro}
+                                        disabled={agregandoMiembro}
+                                    >
+                                        Cancelar
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        className="boton-confirmar-miembro"
+                                        disabled={agregandoMiembro}
+                                    >
+                                        {agregandoMiembro
+                                            ? "Agregando..."
+                                            : "Agregar"}
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                        )}
+
+                    </div>
+                )}
                     <div className="lista-miembros">
 
                         {miembros.length === 0 ? (

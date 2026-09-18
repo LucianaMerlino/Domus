@@ -916,3 +916,151 @@ button {
 
   text-align: center;
 }
+/* ========================================= */
+/*          AGREGAR MIEMBRO                  */
+/* ========================================= */
+
+.agregar-miembro-container {
+  padding: 16px 24px;
+
+  background-color: #18181a;
+
+  border-bottom: 1px solid #29292c;
+}
+
+.boton-agregar-miembro {
+  width: 100%;
+
+  padding: 10px 16px;
+
+  border: 1px solid #4c456f;
+  border-radius: 8px;
+
+  background-color: #232135;
+  color: #a89cf5;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.boton-agregar-miembro:hover {
+  background-color: #302b4a;
+  border-color: #7165c7;
+}
+
+
+/* ========================================= */
+/*       FORMULARIO AGREGAR MIEMBRO          */
+/* ========================================= */
+
+.form-agregar-miembro {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.form-agregar-miembro label {
+  color: #d0d0d3;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-agregar-miembro input {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 10px 12px;
+
+  border: 1px solid #3a3a3e;
+  border-radius: 7px;
+
+  background-color: #101012;
+  color: #f5f5f5;
+
+  font-size: 14px;
+
+  outline: none;
+}
+
+.form-agregar-miembro input:focus {
+  border-color: #7165c7;
+}
+
+.form-agregar-miembro input::placeholder {
+  color: #68686d;
+}
+
+
+/* ========================================= */
+/*              ERROR                        */
+/* ========================================= */
+
+.mensaje-error-miembro {
+  margin: 2px 0 4px;
+
+  color: #ff7b7b;
+
+  font-size: 13px;
+}
+
+
+/* ========================================= */
+/*             ACCIONES                      */
+/* ========================================= */
+
+.acciones-agregar-miembro {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  margin-top: 4px;
+}
+
+.boton-cancelar-miembro,
+.boton-confirmar-miembro {
+  padding: 8px 14px;
+
+  border-radius: 7px;
+
+  font-size: 14px;
+
+  cursor: pointer;
+}
+
+.boton-cancelar-miembro {
+  border: 1px solid #3a3a3e;
+
+  background-color: transparent;
+  color: #b0b0b5;
+}
+
+.boton-cancelar-miembro:hover {
+  background-color: #29292c;
+  color: #ffffff;
+}
+
+.boton-confirmar-miembro {
+  border: 1px solid #4c456f;
+
+  background-color: #7165c7;
+  color: #ffffff;
+}
+
+.boton-confirmar-miembro:hover {
+  background-color: #8175d7;
+}
+
+.boton-cancelar-miembro:disabled,
+.boton-confirmar-miembro:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

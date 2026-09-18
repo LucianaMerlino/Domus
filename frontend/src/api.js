@@ -161,3 +161,32 @@ export async function marcarTareaRealizada(id) {
 
     return datos;
 }
+// ======================================================
+// Agregar un miembro a un hogar
+// ======================================================
+export async function agregarMiembro(hogarId, email, adminId) {
+    const respuesta = await fetch(
+        `${API_URL}/hogares/${hogarId}/miembros`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email,
+                adminId
+            })
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.error ||
+            "No se pudo agregar el miembro"
+        );
+    }
+
+    return datos;
+}
