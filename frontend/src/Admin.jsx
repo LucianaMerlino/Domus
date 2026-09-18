@@ -18,6 +18,9 @@ function Admin({ id }) {
     const [hogarId, setHogarId] = useState(null);
     const [tareas, setTareas] = useState([]);
     const [miembros, setMiembros] = useState([]);
+
+    const [modalMiembrosAbierto, setModalMiembrosAbierto] = useState(false);
+
     const [tareaAEliminar, setTareaAEliminar] = useState(null);
     const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
     const [modoEdicion, setModoEdicion] = useState(false);
@@ -112,6 +115,14 @@ function Admin({ id }) {
 
     function cerrarModalCrear() {
         setModalCrearAbierto(false);
+    }
+
+    function abrirModalMiembros() {
+    setModalMiembrosAbierto(true);
+    }
+
+    function cerrarModalMiembros() {
+    setModalMiembrosAbierto(false);
     }
 
     function abrirModalDetalle(tarea) {
@@ -302,11 +313,43 @@ function Admin({ id }) {
 
             <h1>Domus</h1>
 
-            <h2>{admin.nombre}</h2>
+            <div className="home-usuario-header">
 
-            <p>Rol: {admin.rol}</p>
+                <div className="home-usuario-info">
+
+                    <h2>{admin.nombre}</h2>
+
+                    <div className="home-hogar">
+
+                        <button
+                            type="button"
+                            className="boton-hogar"
+                            onClick={abrirModalMiembros}
+                            aria-label="Ver miembros del hogar"
+                            title="Ver miembros del hogar"
+                        >
+                            🏠
+                        </button>
+
+                        <span>
+                            {admin.hogar || "Sin hogar"}
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <span className="home-rol">
+                    {admin.rol === "admin"
+                        ? "Administrador/a"
+                        : "Miembro"}
+                </span>
+
+            </div>
 
             <p>Email: {admin.email}</p>
+
+            <hr />
 
             <hr />
 
@@ -752,9 +795,88 @@ function Admin({ id }) {
                     </div>
                 </div>
             )}
+            {modalMiembrosAbierto && (
+            <div
+                className="modal-fondo"
+                onClick={cerrarModalMiembros}
+            >
+                <div
+                    className="modal modal-miembros"
+                    onClick={(event) => event.stopPropagation()}
+                >
+
+                    <div className="modal-miembros-header">
+
+                        <h2>
+                            Miembros del hogar
+                        </h2>
+
+                        <button
+                            type="button"
+                            className="cerrar-modal-miembros"
+                            onClick={cerrarModalMiembros}
+                            aria-label="Cerrar"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+                    <div className="lista-miembros">
+
+                        {miembros.length === 0 ? (
+
+                            <p className="sin-miembros">
+                                No hay miembros en este hogar.
+                            </p>
+
+                        ) : (
+
+                            miembros.map((miembro) => (
+
+                                <div
+                                    className="miembro-item"
+                                    key={miembro.id}
+                                >
+
+                                    <div className="miembro-avatar">
+                                        {miembro.nombre
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                    </div>
+
+                                    <div className="miembro-info">
+
+                                        <span className="miembro-nombre">
+                                            {miembro.nombre}
+                                        </span>
+
+                                        <span
+                                            className={
+                                                miembro.rol === "admin"
+                                                    ? "miembro-rol admin"
+                                                    : "miembro-rol"
+                                            }
+                                        >
+                                            {miembro.rol === "admin"
+                                                ? "Administrador/a"
+                                                : "Miembro"}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            ))
+
+                        )}
+
+                    </div>
+
+                </div>
+            </div>
+        )}
         </div>
-
-
     );
 }
 

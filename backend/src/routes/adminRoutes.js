@@ -21,23 +21,25 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
     try {
-        const result = await pool.query(
-            `SELECT
-                u.id,
-                u.nombre,
-                u.email,
-                u.rol,
-                (
-                    SELECT m.hogar_id
-                    FROM miembros_hogar m
-                    WHERE m.usuario_id = u.id
-                    ORDER BY m.hogar_id
-                    LIMIT 1
-                ) AS hogar_id
-             FROM usuarios u
-             WHERE u.id = $1 AND u.rol = 'admin'`,
-            [req.params.id]
-        );
+            const result = await pool.query(
+                `SELECT
+                    u.id,
+                    u.nombre,
+                    u.email,
+                    u.rol,
+                    h.id AS hogar_id,
+                    h.nombre AS hogar
+                FROM usuarios u
+                LEFT JOIN miembros_hogar mh
+                    ON mh.usuario_id = u.id
+                LEFT JOIN hogares h
+                    ON h.id = mh.hogar_id
+                WHERE u.id = $1
+                AND u.rol = 'admin'
+                ORDER BY h.id
+                LIMIT 1`,
+                [req.params.id]
+            );
 
         if (result.rows.length === 0) {
             return res.status(404).json({
