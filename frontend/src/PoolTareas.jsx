@@ -4,7 +4,8 @@ import {
     obtenerPlantillas,
     crearPlantilla,
     actualizarPlantilla,
-    eliminarPlantilla
+    eliminarPlantilla,
+    crearTarea
 } from "./api";
 
 
@@ -39,7 +40,7 @@ function validarFormulario({ nombre, descripcion, puntos }) {
 
 // Pool de tareas del hogar: plantillas con nombre, descripción
 // y puntaje estándar que después se van a poder asignar.
-function PoolTareas({ hogarId }) {
+function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
 
     const [plantillas, setPlantillas] = useState([]);
     const [error, setError] = useState("");
@@ -52,6 +53,10 @@ function PoolTareas({ hogarId }) {
     const [guardando, setGuardando] = useState(false);
 
     const [plantillaAEliminar, setPlantillaAEliminar] = useState(null);
+    const [plantillaAsignacion, setPlantillaAsignacion] = useState(null);
+    const [miembroSeleccionado, setMiembroSeleccionado] = useState("");
+    const [errorAsignacion, setErrorAsignacion] = useState("");
+    const [asignando, setAsignando] = useState(false);
 
 
     useEffect(() => {
@@ -160,6 +165,61 @@ function PoolTareas({ hogarId }) {
         }
     }
 
+    function abrirAsignacion(plantilla) {
+        setPlantillaAsignacion(plantilla);
+        setMiembroSeleccionado("");
+        setErrorAsignacion("");
+        setMensaje("");
+    }
+
+    function cerrarAsignacion() {
+        setPlantillaAsignacion(null);
+        setMiembroSeleccionado("");
+        setErrorAsignacion("");
+    }
+
+    async function asignarPlantilla(event) {
+        event.preventDefault();
+
+        if (!plantillaAsignacion) {
+            return;
+        }
+
+        if (!miembroSeleccionado) {
+            setErrorAsignacion("Seleccioná un miembro antes de asignar la tarea");
+            return;
+        }
+
+        setAsignando(true);
+        setErrorAsignacion("");
+
+        try {
+            const tareaCreada = await crearTarea({
+                hogar_id: hogarId,
+                plantilla_id: plantillaAsignacion.id,
+                asignado_a: miembroSeleccionado,
+                nombre: plantillaAsignacion.nombre,
+                descripcion: plantillaAsignacion.descripcion || "",
+                puntos: plantillaAsignacion.puntos
+            });
+
+            if (onTareaCreada) {
+                onTareaCreada(tareaCreada);
+            }
+
+            setMensaje(`Tarea "${plantillaAsignacion.nombre}" asignada a ${miembroSeleccionado}`);
+            setPlantillaAsignacion(null);
+            setMiembroSeleccionado("");
+            setError("");
+
+        } catch (error) {
+            setErrorAsignacion(error.message);
+
+        } finally {
+            setAsignando(false);
+        }
+    }
+
 
     return (
         <div className="tareas-hogar-container">
@@ -212,6 +272,17 @@ function PoolTareas({ hogarId }) {
                             <span className="badge-puntos">
                                 {plantilla.puntos} pts
                             </span>
+
+                            <button
+                                type="button"
+                                className="boton-asignar"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    abrirAsignacion(plantilla);
+                                }}
+                            >
+                                Asignar
+                            </button>
 
                             <button
                                 type="button"
@@ -324,6 +395,51 @@ function PoolTareas({ hogarId }) {
                                 Eliminar
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {plantillaAsignacion && (
+                <div className="modal-fondo">
+                    <div className="modal">
+                        <h2>Asignar tarea del pool</h2>
+
+                        <p>
+                            <strong>{plantillaAsignacion.nombre}</strong>
+                            {" "}({plantillaAsignacion.puntos} pts)
+                        </p>
+
+                        <form onSubmit={asignarPlantilla}>
+                            <div className="form-group">
+                                <label htmlFor="miembro-asignado">Miembro</label>
+                                <select
+                                    id="miembro-asignado"
+                                    value={miembroSeleccionado}
+                                    onChange={(event) => setMiembroSeleccionado(event.target.value)}
+                                >
+                                    <option value="">Seleccioná un miembro</option>
+                                    {miembros.map((miembro) => (
+                                        <option key={miembro.id} value={miembro.nombre}>
+                                            {miembro.nombre}
+                                            {miembro.rol === "admin" ? " (admin)" : ""}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {errorAsignacion && (
+                                <p className="mensaje-error">{errorAsignacion}</p>
+                            )}
+
+                            <div className="modal-botones">
+                                <button type="button" onClick={cerrarAsignacion} disabled={asignando}>
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={asignando}>
+                                    {asignando ? "Asignando..." : "Asignar tarea"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

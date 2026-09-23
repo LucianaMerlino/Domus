@@ -2,6 +2,130 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../config/database");
 
+// Crear una instancia de tarea a partir de una plantilla o datos directos
+router.post("/", async (req, res) => {
+    try {
+        const hogarId = Number(req.body.hogar_id ?? req.body.hogarId);
+        const plantillaId = req.body.plantilla_id ?? req.body.plantillaId ?? null;
+        const miembroNombre = typeof req.body.asignado_a === "string"
+            ? req.body.asignado_a.trim()
+            : "";
+
+        if (!Number.isInteger(hogarId) || hogarId <= 0) {
+            return res.status(400).json({
+                error: "El hogar indicado no es válido"
+            });
+        }
+
+        let nombre = typeof req.body.nombre === "string" ? req.body.nombre.trim() : "";
+        let descripcion = typeof req.body.descripcion === "string" ? req.body.descripcion.trim() : "";
+        let puntos = req.body.puntos;
+
+        if (plantillaId != null) {
+            const plantillaResultado = await pool.query(
+                `SELECT id, hogar_id, nombre, descripcion, puntos
+                 FROM plantillas_tarea
+                 WHERE id = $1 AND hogar_id = $2`,
+                [plantillaId, hogarId]
+            );
+
+            if (plantillaResultado.rows.length === 0) {
+                return res.status(404).json({
+                    error: "La tarea del pool no existe o no pertenece a este hogar"
+                });
+            }
+
+            const plantilla = plantillaResultado.rows[0];
+            nombre = nombre || plantilla.nombre;
+            descripcion = descripcion || plantilla.descripcion || "";
+            puntos = puntos == null ? plantilla.puntos : puntos;
+        }
+
+        if (nombre === "") {
+            return res.status(400).json({
+                error: "El título es un campo obligatorio"
+            });
+        }
+
+        if (nombre.length > 100 || !/^[\p{L}\s'".,]+$/u.test(nombre)) {
+            return res.status(400).json({
+                error: "El título no es válido"
+            });
+        }
+
+        if (descripcion.length > 500) {
+            return res.status(400).json({
+                error: "La descripción no puede superar los 500 caracteres"
+            });
+        }
+
+        const puntosNumero = Number(puntos);
+        if (!Number.isInteger(puntosNumero) || puntosNumero < 0) {
+            return res.status(400).json({
+                error: "Los puntos deben ser un número entero mayor o igual a 0"
+            });
+        }
+
+        const asignadoFinal = miembroNombre !== "" ? miembroNombre : null;
+
+        if (asignadoFinal) {
+            const miembroResultado = await pool.query(
+                `SELECT 1
+                 FROM miembros_hogar m
+                 JOIN usuarios u ON u.id = m.usuario_id
+                 WHERE m.hogar_id = $1 AND u.nombre = $2`,
+                [hogarId, asignadoFinal]
+            );
+
+            if (miembroResultado.rows.length === 0) {
+                return res.status(400).json({
+                    error: "El miembro asignado no pertenece al hogar"
+                });
+            }
+        }
+
+        const resultado = await pool.query(
+            `INSERT INTO tareas (
+                hogar_id,
+                nombre,
+                descripcion,
+                puntos,
+                estado,
+                completada,
+                asignado_a,
+                plantilla_id
+             )
+             VALUES ($1, $2, $3, $4, 'Pendiente', FALSE, $5, $6)
+             RETURNING
+                id,
+                hogar_id,
+                nombre,
+                descripcion,
+                puntos,
+                estado,
+                asignado_a,
+                completada,
+                plantilla_id,
+                creado_en`,
+            [
+                hogarId,
+                nombre,
+                descripcion || null,
+                puntosNumero,
+                asignadoFinal,
+                plantillaId
+            ]
+        );
+
+        res.status(201).json(resultado.rows[0]);
+    } catch (error) {
+        console.error("Error al crear tarea:", error);
+        res.status(500).json({
+            error: "No se pudo crear la tarea"
+        });
+    }
+});
+
 // Obtener todas las tareas (con filtros y orden)
 router.get("/", async (req, res) => {
     try {
@@ -49,7 +173,7 @@ router.get("/", async (req, res) => {
         }
 
         const consulta = `
-            SELECT id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, completada, creado_en
+            SELECT id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, completada, plantilla_id, creado_en
             FROM tareas
             ${where}
             ${orderBy}
@@ -88,6 +212,7 @@ router.put("/:id/realizada", async (req, res) => {
                  estado,
                  asignado_a,
                  completada,
+                 plantilla_id,
                  creado_en`,
             [id]
         );
@@ -190,7 +315,7 @@ router.put("/:id", async (req, res) => {
                  asignado_a = $5,
                  completada = $6
              WHERE id = $7
-             RETURNING id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, completada, creado_en`,
+             RETURNING id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, completada, plantilla_id, creado_en`,
             [
                 nombreLimpio,
                 descripcion ? descripcion.trim() : null,

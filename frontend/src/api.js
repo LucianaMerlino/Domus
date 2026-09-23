@@ -44,6 +44,25 @@ export async function obtenerTareas({ estado, asignado, orden, hogar } = {}) {
     return respuesta.json();
 }
 
+// Crear una tarea o instancia a partir de una plantilla
+export async function crearTarea(tarea) {
+    const respuesta = await fetch(`${API_URL}/tasks`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(tarea),
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(datos.error || "No se pudo crear la tarea");
+    }
+
+    return datos;
+}
+
 //Eliminar una tarea
 export async function eliminarTarea(id) {
   const respuesta = await fetch(`${API_URL}/tasks/${id}`, {

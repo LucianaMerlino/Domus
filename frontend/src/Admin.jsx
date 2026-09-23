@@ -23,6 +23,12 @@ function Admin({ id }) {
     const [tareas, setTareas] = useState([]);
     const [miembros, setMiembros] = useState([]);
 
+    function manejarTareaCreada(nuevaTarea) {
+        setTareas((tareasActuales) => [nuevaTarea, ...tareasActuales]);
+        setMensaje(`Tarea asignada a ${nuevaTarea.asignado_a || "sin asignar"}`);
+        setError(null);
+    }
+
     const [modalMiembrosAbierto, setModalMiembrosAbierto] = useState(false);
     const [agregarMiembroAbierto, setAgregarMiembroAbierto] = useState(false);
     const [emailNuevoMiembro, setEmailNuevoMiembro] = useState("");
@@ -389,7 +395,13 @@ function Admin({ id }) {
                 </button>
             </div>
 
-            {seccion === "pool" && <PoolTareas hogarId={hogarId} />}
+            {seccion === "pool" && (
+                <PoolTareas
+                    hogarId={hogarId}
+                    miembros={miembros}
+                    onTareaCreada={manejarTareaCreada}
+                />
+            )}
 
             {seccion === "tareas" && (
             <div className="tareas-hogar-container">
