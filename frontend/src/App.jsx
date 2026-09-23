@@ -1,11 +1,29 @@
 import {
     BrowserRouter,
     Routes,
-    Route
+    Route,
+    Navigate
 } from "react-router-dom";
 
 import Admin from "./Admin";
 import Perfil from "./Perfil";
+import Login from "./Login";
+import { obtenerSesion } from "./sesion";
+
+
+// Home: sin sesión va al login; con sesión muestra
+// el panel del admin o el perfil del integrante
+function Home() {
+    const sesion = obtenerSesion();
+
+    if (!sesion) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return sesion.rol === "admin"
+        ? <Admin id={sesion.id} />
+        : <Perfil id={sesion.id} />;
+}
 
 function App() {
     return (
@@ -14,24 +32,18 @@ function App() {
             <Routes>
 
                 <Route
-                    path="/admin/1"
-                    element={<Admin id={1} />}
+                    path="/login"
+                    element={<Login />}
                 />
 
                 <Route
-                    path="/admin/2"
-                    element={<Admin id={2} />}
-                />
-
-
-                <Route
-                    path="/perfil/1"
-                    element={<Perfil id={1} />}
+                    path="/"
+                    element={<Home />}
                 />
 
                 <Route
-                    path="/perfil/2"
-                    element={<Perfil id={2} />}
+                    path="*"
+                    element={<Navigate to="/" replace />}
                 />
 
             </Routes>

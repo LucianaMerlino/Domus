@@ -44,25 +44,6 @@ export async function obtenerTareas({ estado, asignado, orden, hogar } = {}) {
     return respuesta.json();
 }
 
-// Crear una nueva tarea dentro de un hogar
-export async function crearTarea(hogarId, tarea) {
-    const respuesta = await fetch(`${API_URL}/hogares/${hogarId}/tareas`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(tarea),
-    });
-
-    const datos = await respuesta.json();
-
-    if (!respuesta.ok) {
-        throw new Error(datos.error || "No se pudo crear la tarea");
-    }
-
-    return datos;
-}
-
 //Eliminar una tarea
 export async function eliminarTarea(id) {
   const respuesta = await fetch(`${API_URL}/tasks/${id}`, {
@@ -213,4 +194,76 @@ export async function eliminarMiembro(hogarId, usuarioId, adminId) {
     }
 
     return datos;
+}
+// ======================================================
+// Iniciar sesión
+// ======================================================
+export async function login(usuario, contrasena) {
+    const respuesta = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ usuario, contrasena })
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(datos.error || "No se pudo iniciar sesión");
+    }
+
+    return datos;
+}
+
+// ======================================================
+// Pool de tareas (plantillas) de un hogar
+// ======================================================
+async function pedirPlantillas(url, opciones, mensajeError) {
+    const respuesta = await fetch(url, {
+        headers: {
+            "Content-Type": "application/json"
+        },
+        ...opciones
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(datos.error || mensajeError);
+    }
+
+    return datos;
+}
+
+export function obtenerPlantillas(hogarId) {
+    return pedirPlantillas(
+        `${API_URL}/hogares/${hogarId}/plantillas`,
+        {},
+        "No se pudo obtener el pool de tareas"
+    );
+}
+
+export function crearPlantilla(hogarId, plantilla) {
+    return pedirPlantillas(
+        `${API_URL}/hogares/${hogarId}/plantillas`,
+        { method: "POST", body: JSON.stringify(plantilla) },
+        "No se pudo crear la tarea en el pool"
+    );
+}
+
+export function actualizarPlantilla(id, plantilla) {
+    return pedirPlantillas(
+        `${API_URL}/plantillas/${id}`,
+        { method: "PUT", body: JSON.stringify(plantilla) },
+        "No se pudo editar la tarea del pool"
+    );
+}
+
+export function eliminarPlantilla(id) {
+    return pedirPlantillas(
+        `${API_URL}/plantillas/${id}`,
+        { method: "DELETE" },
+        "No se pudo eliminar la tarea del pool"
+    );
 }

@@ -17,12 +17,18 @@ const hogarRoutes = require("./routes/hogarRoutes");
 
 const usuarioRoutes = require("./routes/usuarioRoutes");
 
+const authRoutes = require("./routes/authRoutes");
+
+const plantillaRoutes = require("./routes/plantillaRoutes");
+
 app.use(cors());
 app.use(express.json());
 app.use("/api/admins", adminRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/hogares", hogarRoutes);
 app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api", plantillaRoutes);
 
 app.get("/", (req, res) => {
     res.json({

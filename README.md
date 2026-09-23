@@ -80,7 +80,9 @@ Salí con `\q`.
 
 ### 3.2 Correr el script de esquema (`schema.sql`)
 
-Este script crea las tablas: `usuarios`, `hogares`, `miembros_hogar`, `tareas`, `asignaciones_tarea` y `recompensas`.
+Este script crea las tablas: `usuarios`, `hogares`, `miembros_hogar`, `tareas`, `plantillas_tarea`, `asignaciones_tarea` y `recompensas`.
+
+> `plantillas_tarea` es el **pool de tareas** del hogar: tareas base con nombre, descripción y puntaje estándar. Las filas de `tareas` son instancias (con `plantilla_id`) que se crean al asignar una plantilla.
 
 ```bash
 psql -U postgres -d domus -f database/schema.sql
@@ -109,6 +111,7 @@ Deberías ver algo así:
  public | asignaciones_tarea | table | postgres
  public | hogares            | table | postgres
  public | miembros_hogar     | table | postgres
+ public | plantillas_tarea   | table | postgres
  public | recompensas        | table | postgres
  public | tareas             | table | postgres
  public | usuarios           | table | postgres
@@ -217,16 +220,19 @@ Por defecto Vite lo levanta en `http://localhost:5173`.
 Abrí en el navegador:
 
 ```
-http://localhost:5173/admin/1
+http://localhost:5173
 ```
 
-o
+Sin sesión te redirige a `/login`. Usuarios de prueba cargados por `seed.sql` (contraseña de todos: `1234`):
 
-```
-http://localhost:5173/admin/2
-```
+| Usuario | Rol | Hogar |
+|---|---|---|
+| `admin1` | admin | Hogar de prueba |
+| `admin2` | admin | Casa Belgrano |
+| `tomas`, `facu`, `mariajose`, `lucia` | integrante | Hogar de prueba |
+| `julian`, `sofia`, `bruno` | integrante | Casa Belgrano |
 
-(son los IDs de los dos administradores de prueba cargados por `seed.sql`). Deberías ver el panel de Domus con los datos del admin y el formulario para crear tareas.
+Los admins ven el panel del hogar y los integrantes su perfil. La sesión queda guardada en el navegador (`localStorage`, clave `domus-sesion`); para cambiar de usuario borrala desde las DevTools.
 
 > El frontend llama a `http://localhost:3000/api` (definido en `api.js`), así que el backend tiene que estar corriendo en el puerto 3000 para que la pantalla cargue los datos.
 
@@ -265,4 +271,4 @@ npm run dev
 | `db-test` devuelve error / no conecta | El `.env` del backend no coincide con el usuario/contraseña real de tu Postgres | Revisar `DB_USER` / `DB_PASSWORD` / `DB_PORT` en `.env` |
 | `role "postgres" does not exist` | Tu instalación de Postgres usa otro usuario por defecto | Cambiar `DB_USER` en `.env` por tu usuario, o crear el rol `postgres` |
 | El frontend no muestra datos y da error de red | El backend no está corriendo en el puerto 3000 | Verificar que `npm run dev` del backend esté activo |
-| Error `duplicate key value violates unique constraint` al crear tarea | Ya existe una tarea con ese título en el mismo hogar (`UNIQUE(hogar_id, nombre)` en `schema.sql`) | Es el comportamiento esperado (regla de negocio: el título no se repite) |
+| "Ya existe una tarea en el pool con ese nombre" al crear una tarea del pool | Ya hay una plantilla con ese nombre en el hogar (índice único sobre `hogar_id` + `LOWER(nombre)`) | Es el comportamiento esperado (regla de negocio: el nombre no se repite en el pool) |

@@ -6,6 +6,8 @@ import {
     marcarTareaRealizada
 } from "./api";
 
+import BotonCerrarSesion from "./BotonCerrarSesion";
+
 import "./Perfil.css";
 
 
@@ -230,11 +232,17 @@ function Perfil({ id }) {
                     </div>
 
 
-                    {/* Rol */}
+                    {/* Rol + cerrar sesión */}
 
-                    <div className="perfil-rol">
+                    <div className="header-acciones">
 
-                        {textoRol(perfil.rol)}
+                        <div className="perfil-rol">
+
+                            {textoRol(perfil.rol)}
+
+                        </div>
+
+                        <BotonCerrarSesion />
 
                     </div>
 

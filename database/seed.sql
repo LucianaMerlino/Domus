@@ -63,3 +63,11 @@ WHERE u.email IN (
     'bruno@domus.local'
 )
 ON CONFLICT (hogar_id, usuario_id) DO NOTHING;
+
+-- Credenciales de prueba: el usuario es la parte del email antes del "@"
+-- (admin1, admin2, tomas, facu, ...) y la contraseña de todos es "1234"
+UPDATE usuarios
+SET
+    nombre_usuario = split_part(email, '@', 1),
+    contrasena = '1234'
+WHERE email LIKE '%@domus.local';
