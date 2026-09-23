@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../config/database");
 
-const { crearTareaEnHogar } = require("./taskRoutes");
-
 
 // ======================================================
 // Obtener miembros de un hogar
@@ -178,13 +176,6 @@ router.post("/:id/miembros", async (req, res) => {
     }
 });
 
-
-// ======================================================
-// Crear tarea dentro de un hogar
-// ======================================================
-router.post("/:id/tareas", (req, res) => {
-    crearTareaEnHogar(req.params.id, req.body, res);
-});
 
 // Eliminar un miembro del hogar
 router.delete("/:id/miembros/:usuarioId", async (req, res) => {

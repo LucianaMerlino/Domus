@@ -1084,3 +1084,30 @@ button {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ========================================= */
+/*          PESTAÑAS DEL PANEL ADMIN          */
+/* ========================================= */
+
+.tabs-admin {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #2a2a2e;
+}
+
+.tabs-admin button {
+  padding: 10px 18px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: #8a8a8f;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.tabs-admin button.tab-activa {
+  color: #f5f5f5;
+  border-bottom-color: #a89cf5;
+}

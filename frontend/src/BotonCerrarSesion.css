@@ -1,0 +1,28 @@
+.boton-cerrar-sesion {
+    padding: 9px 18px;
+
+    border: none;
+    border-radius: 20px;
+
+    background: #d32f2f;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+
+.boton-cerrar-sesion:hover {
+    background: #b71c1c;
+}
+
+
+/* Agrupa la etiqueta de rol con el botón en los encabezados */
+.header-acciones {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

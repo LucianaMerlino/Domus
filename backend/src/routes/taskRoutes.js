@@ -67,117 +67,6 @@ router.get("/", async (req, res) => {
     }
 });
 
-// Lógica compartida para crear una tarea dentro de un hogar.
-// La usan POST /api/tasks (hogar de prueba) y POST /api/hogares/:id/tareas.
-async function crearTareaEnHogar(hogarId, cuerpo, res) {
-    try {
-        const hogarNumero = Number(hogarId);
-
-        if (!Number.isInteger(hogarNumero) || hogarNumero <= 0) {
-            return res.status(400).json({
-                error: "El hogar indicado no es válido"
-            });
-        }
-
-        const { nombre, descripcion, puntos, asignado_a } = cuerpo;
-
-        // El título es obligatorio
-        if (!nombre || nombre.trim() === "") {
-            return res.status(400).json({
-                error: "El título es un campo obligatorio"
-            });
-        }
-
-        const nombreLimpio = nombre.trim();
-
-        // Máximo 100 caracteres
-        if (nombreLimpio.length > 100) {
-            return res.status(400).json({
-                error: "El título no puede superar los 100 caracteres"
-            });
-        }
-
-        // Solo letras, espacios, comillas, puntos y comas
-        if (!/^[\p{L}\s'".,]+$/u.test(nombreLimpio)) {
-            return res.status(400).json({
-                error: "El título solo puede contener letras, comillas, puntos y comas"
-            });
-        }
-
-        // Máximo 500 caracteres
-        if (descripcion && descripcion.length > 500) {
-            return res.status(400).json({
-                error: "La descripción no puede superar los 500 caracteres"
-            });
-        }
-
-        // Validación de puntos (mínimo 0, entero)
-        let puntosLimpios = 0;
-
-        if (puntos !== undefined && puntos !== null && puntos !== "") {
-            const puntosNumero = Number(puntos);
-
-            if (!Number.isInteger(puntosNumero) || puntosNumero < 0) {
-                return res.status(400).json({
-                    error: "Los puntos deben ser un número entero mayor o igual a 0"
-                });
-            }
-
-            puntosLimpios = puntosNumero;
-        }
-
-        // Miembro asignado (opcional): por ahora siempre llega vacío -> null
-        const asignadoLimpio =
-            typeof asignado_a === "string" && asignado_a.trim() !== ""
-                ? asignado_a.trim()
-                : null;
-
-        const resultado = await pool.query(
-            `INSERT INTO tareas
-                (hogar_id, nombre, descripcion, puntos, estado, asignado_a)
-             VALUES
-                ($1, $2, $3, $4, 'Pendiente', $5)
-             RETURNING id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, completada, creado_en`,
-            [
-                hogarNumero,
-                nombreLimpio,
-                descripcion ? descripcion.trim() : null,
-                puntosLimpios,
-                asignadoLimpio
-            ]
-        );
-
-        res.status(201).json(resultado.rows[0]);
-
-    } catch (error) {
-        console.error("Error al crear tarea:", error);
-
-        // Título duplicado en el mismo hogar (UNIQUE(hogar_id, nombre))
-        if (error.code === "23505") {
-            return res.status(400).json({
-                error: "Ya existe una tarea con ese título"
-            });
-        }
-
-        // hogar_id inexistente (violación de clave foránea)
-        if (error.code === "23503") {
-            return res.status(400).json({
-                error: "El hogar indicado no existe"
-            });
-        }
-
-        res.status(500).json({
-            error: "No se pudo crear la tarea"
-        });
-    }
-}
-
-// Crear una nueva tarea en el hogar de prueba (se mantiene por compatibilidad)
-router.post("/", (req, res) => {
-    const hogarDePrueba = 1;
-    crearTareaEnHogar(hogarDePrueba, req.body, res);
-});
-
 // ======================================================
 // Marcar una tarea como realizada
 // ======================================================
@@ -317,12 +206,6 @@ router.put("/:id", async (req, res) => {
     } catch (error) {
         console.error("Error al actualizar tarea:", error);
 
-        if (error.code === "23505") {
-            return res.status(400).json({
-                error: "Ya existe una tarea con ese título"
-            });
-        }
-
         res.status(500).json({ error: "No se pudo actualizar la tarea" });
     }
 });
@@ -357,4 +240,3 @@ router.delete("/:id", async (req, res) => {
 });
 
 module.exports = router;
-module.exports.crearTareaEnHogar = crearTareaEnHogar;
