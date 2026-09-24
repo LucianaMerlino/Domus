@@ -849,8 +849,14 @@ button {
   border-bottom: 1px solid #232326;
 }
 
-.boton-eliminar-miembro {
+.miembro-item-acciones {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.boton-eliminar-miembro {
   padding: 8px 12px;
   border: 1px solid #5a3d3d;
   border-radius: 7px;
@@ -866,6 +872,61 @@ button {
 
 .miembro-item:last-child {
   border-bottom: none;
+}
+
+.miembro-toggle {
+  border: 1px solid #4c456f;
+  border-radius: 7px;
+  background-color: #232135;
+  color: #d8d1ff;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.miembro-toggle:hover {
+  background-color: #302b4a;
+}
+
+.modal-miembros-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 12px;
+  background-color: #18181a;
+  border-bottom: 1px solid #29292c;
+}
+
+.modal-miembros-acciones .boton-editar-permisos {
+  margin-right: auto;
+}
+
+.boton-editar-permisos,
+.boton-cancelar-miembros,
+.boton-eliminar-miembros {
+  padding: 9px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.boton-editar-permisos {
+  border: 1px solid #4c456f;
+  background-color: #232135;
+  color: #d8d1ff;
+}
+
+.boton-cancelar-miembros {
+  border: 1px solid #3a3a3e;
+  background: transparent;
+  color: #d0d0d3;
+}
+
+.boton-eliminar-miembros {
+  border: 1px solid #5a3d3d;
+  background-color: #2a1b1d;
+  color: #ffb0b0;
 }
 
 

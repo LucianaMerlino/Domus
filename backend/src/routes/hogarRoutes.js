@@ -177,6 +177,105 @@ router.post("/:id/miembros", async (req, res) => {
 });
 
 
+router.put("/:id/miembros/:usuarioId/rol", async (req, res) => {
+    try {
+        const hogarId = Number(req.params.id);
+        const usuarioId = Number(req.params.usuarioId);
+        const { adminId, rol } = req.body || {};
+
+        if (!Number.isInteger(hogarId) || hogarId <= 0) {
+            return res.status(400).json({
+                error: "El hogar indicado no es válido"
+            });
+        }
+
+        if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+            return res.status(400).json({
+                error: "El usuario indicado no es válido"
+            });
+        }
+
+        if (!adminId) {
+            return res.status(403).json({
+                error: "Se requiere identificar al administrador"
+            });
+        }
+
+        const rolNormalizado = rol === "admin" ? "admin" : "integrante";
+
+        if (!["admin", "integrante"].includes(rolNormalizado)) {
+            return res.status(400).json({
+                error: "El rol indicado no es válido"
+            });
+        }
+
+        const administrador = await pool.query(
+            `SELECT u.id, u.rol
+             FROM miembros_hogar m
+             JOIN usuarios u ON u.id = m.usuario_id
+             WHERE m.hogar_id = $1 AND u.id = $2`,
+            [hogarId, adminId]
+        );
+
+        if (administrador.rows.length === 0 || administrador.rows[0].rol !== "admin") {
+            return res.status(403).json({
+                error: "Solo el administrador puede cambiar permisos"
+            });
+        }
+
+        const miembro = await pool.query(
+            `SELECT u.id, u.rol
+             FROM miembros_hogar m
+             JOIN usuarios u ON u.id = m.usuario_id
+             WHERE m.hogar_id = $1 AND u.id = $2`,
+            [hogarId, usuarioId]
+        );
+
+        if (miembro.rows.length === 0) {
+            return res.status(404).json({
+                error: "No se encontró ese miembro en el hogar"
+            });
+        }
+
+        const rolActual = miembro.rows[0].rol;
+
+        if (rolActual === "admin" && rolNormalizado !== "admin") {
+            const admins = await pool.query(
+                `SELECT COUNT(*)::int AS total
+                 FROM miembros_hogar m
+                 JOIN usuarios u ON u.id = m.usuario_id
+                 WHERE m.hogar_id = $1 AND u.rol = 'admin'`,
+                [hogarId]
+            );
+
+            if ((admins.rows[0]?.total ?? 0) <= 1) {
+                return res.status(400).json({
+                    error: "Un hogar no puede quedar sin administradores"
+                });
+            }
+        }
+
+        const resultado = await pool.query(
+            `UPDATE usuarios
+             SET rol = $1
+             WHERE id = $2
+             RETURNING id, nombre, email, rol`,
+            [rolNormalizado, usuarioId]
+        );
+
+        res.json({
+            mensaje: "Rol actualizado correctamente",
+            usuario: resultado.rows[0]
+        });
+    } catch (error) {
+        console.error("Error al actualizar el rol del miembro:", error);
+
+        res.status(500).json({
+            error: "No se pudo actualizar el rol del miembro"
+        });
+    }
+});
+
 // Eliminar un miembro del hogar
 router.delete("/:id/miembros/:usuarioId", async (req, res) => {
     try {
@@ -220,6 +319,36 @@ router.delete("/:id/miembros/:usuarioId", async (req, res) => {
             return res.status(403).json({
                 error: "El administrador no puede eliminarse a sí mismo"
             });
+        }
+
+        const miembro = await pool.query(
+            `SELECT u.id, u.rol
+             FROM miembros_hogar m
+             JOIN usuarios u ON u.id = m.usuario_id
+             WHERE m.hogar_id = $1 AND u.id = $2`,
+            [hogarId, usuarioId]
+        );
+
+        if (miembro.rows.length === 0) {
+            return res.status(404).json({
+                error: "No se encontró ese miembro en el hogar"
+            });
+        }
+
+        if (miembro.rows[0].rol === "admin") {
+            const admins = await pool.query(
+                `SELECT COUNT(*)::int AS total
+                 FROM miembros_hogar m
+                 JOIN usuarios u ON u.id = m.usuario_id
+                 WHERE m.hogar_id = $1 AND u.rol = 'admin'`,
+                [hogarId]
+            );
+
+            if ((admins.rows[0]?.total ?? 0) <= 1) {
+                return res.status(400).json({
+                    error: "Un hogar no puede quedar sin administradores"
+                });
+            }
         }
 
         const resultado = await pool.query(

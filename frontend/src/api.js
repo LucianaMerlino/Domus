@@ -191,6 +191,27 @@ export async function agregarMiembro(hogarId, email, adminId) {
     return datos;
 }
 
+export async function actualizarRolMiembro(hogarId, usuarioId, adminId, rol) {
+    const respuesta = await fetch(
+        `${API_URL}/hogares/${hogarId}/miembros/${usuarioId}/rol`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ adminId, rol })
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(datos.error || "No se pudo actualizar el rol del miembro");
+    }
+
+    return datos;
+}
+
 // Eliminar un miembro del hogar
 export async function eliminarMiembro(hogarId, usuarioId, adminId) {
     const respuesta = await fetch(

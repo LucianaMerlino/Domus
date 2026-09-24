@@ -8,7 +8,8 @@ import {
     agregarMiembro,
     eliminarTarea,
     actualizarTarea,
-    eliminarMiembro
+    eliminarMiembro,
+    actualizarRolMiembro
 } from "./api";
 
 import BotonCerrarSesion from "./BotonCerrarSesion";
@@ -35,6 +36,9 @@ function Admin({ id }) {
     const [errorMiembro, setErrorMiembro] = useState("");
     const [agregandoMiembro, setAgregandoMiembro] = useState(false);
     const [miembroAEliminar, setMiembroAEliminar] = useState(null);
+    const [modoEdicionPermisos, setModoEdicionPermisos] = useState(false);
+    const [modoEliminacion, setModoEliminacion] = useState(false);
+    const [rolesPendientes, setRolesPendientes] = useState({});
 
     const [tareaAEliminar, setTareaAEliminar] = useState(null);
     const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
@@ -104,11 +108,18 @@ function Admin({ id }) {
         };
     }, [hogarId, estado, asignado, orden]);
 
+    function getRolEtiqueta(rol) {
+        return rol === "admin" ? "Administrador" : "Miembro";
+    }
+
     function abrirModalMiembros() {
         setModalMiembrosAbierto(true);
         setAgregarMiembroAbierto(false);
         setEmailNuevoMiembro("");
         setErrorMiembro("");
+        setModoEdicionPermisos(false);
+        setModoEliminacion(false);
+        setRolesPendientes({});
     }
 
     function cerrarModalMiembros() {
@@ -116,9 +127,83 @@ function Admin({ id }) {
         setAgregarMiembroAbierto(false);
         setEmailNuevoMiembro("");
         setErrorMiembro("");
+        setModoEdicionPermisos(false);
+        setModoEliminacion(false);
+        setRolesPendientes({});
+    }
+
+    function iniciarEdicionPermisos() {
+        setModoEliminacion(false);
+        setModoEdicionPermisos(true);
+        setRolesPendientes(
+            Object.fromEntries(miembros.map((miembro) => [miembro.id, miembro.rol]))
+        );
+    }
+
+    function cancelarEdicionPermisos() {
+        setModoEdicionPermisos(false);
+        setModoEliminacion(false);
+        setRolesPendientes({});
+    }
+
+    async function guardarCambiosPermisos() {
+        const cambios = Object.entries(rolesPendientes).filter(([usuarioId, rolNuevo]) => {
+            const miembroActual = miembros.find((miembro) => Number(miembro.id) === Number(usuarioId));
+            return miembroActual && miembroActual.rol !== rolNuevo;
+        });
+
+        if (cambios.length === 0) {
+            cancelarEdicionPermisos();
+            return;
+        }
+
+        try {
+            for (const [usuarioId, rolNuevo] of cambios) {
+                await actualizarRolMiembro(
+                    hogarId ?? HOGAR_POR_DEFECTO,
+                    Number(usuarioId),
+                    Number(id),
+                    rolNuevo
+                );
+            }
+
+            setMiembros((miembrosActuales) =>
+                miembrosActuales.map((miembro) => {
+                    const rolNuevo = rolesPendientes[miembro.id];
+                    return rolNuevo ? { ...miembro, rol: rolNuevo } : miembro;
+                })
+            );
+
+            setMensaje("Permisos actualizados correctamente");
+            setError(null);
+            cancelarEdicionPermisos();
+        } catch (error) {
+            setError(error.message);
+        }
+    }
+
+    function alternarRolMiembro(miembroId) {
+        setRolesPendientes((rolesActuales) => {
+            const rolActual = rolesActuales[miembroId] ??
+                miembros.find((miembro) => Number(miembro.id) === Number(miembroId))?.rol ??
+                "integrante";
+
+            return {
+                ...rolesActuales,
+                [miembroId]: rolActual === "admin" ? "integrante" : "admin"
+            };
+        });
+    }
+
+    function activarModoEliminacion() {
+        setModoEdicionPermisos(false);
+        setModoEliminacion(true);
     }
 
     function abrirFormularioAgregarMiembro() {
+        setModoEdicionPermisos(false);
+        setModoEliminacion(false);
+        setRolesPendientes({});
         setAgregarMiembroAbierto(true);
         setEmailNuevoMiembro("");
         setErrorMiembro("");
@@ -720,81 +805,132 @@ function Admin({ id }) {
 
                     </div>
                     {admin.rol === "admin" && (
-                    <div className="agregar-miembro-container">
+                        <div className="agregar-miembro-container">
 
-                        {!agregarMiembroAbierto ? (
+                            {!agregarMiembroAbierto ? (
+
+                                <button
+                                    type="button"
+                                    className="boton-agregar-miembro"
+                                    onClick={() => {
+                                        cancelarEdicionPermisos();
+                                        abrirFormularioAgregarMiembro();
+                                    }}
+                                >
+                                    + Agregar miembro
+                                </button>
+
+                            ) : (
+
+                                <form
+                                    className="form-agregar-miembro"
+                                    onSubmit={manejarAgregarMiembro}
+                                >
+
+                                    <label htmlFor="email-nuevo-miembro">
+                                        Email del usuario
+                                    </label>
+
+                                    <input
+                                        id="email-nuevo-miembro"
+                                        type="email"
+                                        value={emailNuevoMiembro}
+                                        onChange={(event) => {
+                                            setEmailNuevoMiembro(
+                                                event.target.value
+                                            );
+
+                                            if (errorMiembro) {
+                                                setErrorMiembro("");
+                                            }
+                                        }}
+                                        placeholder="ejemplo@gmail.com"
+                                        autoFocus
+                                    />
+
+                                    {errorMiembro && (
+                                        <p className="mensaje-error-miembro">
+                                            {errorMiembro}
+                                        </p>
+                                    )}
+
+                                    <div className="acciones-agregar-miembro">
+
+                                        <button
+                                            type="button"
+                                            className="boton-cancelar-miembro"
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                cancelarAgregarMiembro();
+                                            }}
+                                            disabled={agregandoMiembro}
+                                        >
+                                            Cancelar
+                                        </button>
+
+                                        <button
+                                            type="submit"
+                                            className="boton-confirmar-miembro"
+                                            onClick={(event) => event.stopPropagation()}
+                                            disabled={agregandoMiembro}
+                                        >
+                                            {agregandoMiembro
+                                                ? "Agregando..."
+                                                : "Agregar"}
+                                        </button>
+
+                                    </div>
+
+                                </form>
+
+                            )}
+
+                        </div>
+                    )}
+
+                    {admin.rol === "admin" && (
+                        <div className="modal-miembros-acciones">
+                            {!modoEliminacion && (
+                                <button
+                                    type="button"
+                                    className="boton-editar-permisos"
+                                    onClick={() => {
+                                        if (agregarMiembroAbierto) {
+                                            cancelarAgregarMiembro();
+                                        }
+                                        if (modoEliminacion) {
+                                            cancelarEdicionPermisos();
+                                        }
+                                        if (modoEdicionPermisos) {
+                                            guardarCambiosPermisos();
+                                            return;
+                                        }
+                                        iniciarEdicionPermisos();
+                                    }}
+                                >
+                                    {modoEdicionPermisos ? "Guardar cambios" : "Editar permisos"}
+                                </button>
+                            )}
 
                             <button
                                 type="button"
-                                className="boton-agregar-miembro"
-                                onClick={abrirFormularioAgregarMiembro}
+                                className={modoEliminacion || modoEdicionPermisos ? "boton-cancelar-miembros" : "boton-eliminar-miembros"}
+                                onClick={() => {
+                                    if (agregarMiembroAbierto) {
+                                        cancelarAgregarMiembro();
+                                    }
+                                    if (modoEdicionPermisos || modoEliminacion) {
+                                        cancelarEdicionPermisos();
+                                        return;
+                                    }
+                                    activarModoEliminacion();
+                                }}
                             >
-                                + Agregar miembro
+                                {modoEdicionPermisos ? "Cancelar" : modoEliminacion ? "Hecho" : "Eliminar"}
                             </button>
+                        </div>
+                    )}
 
-                        ) : (
-
-                            <form
-                                className="form-agregar-miembro"
-                                onSubmit={manejarAgregarMiembro}
-                            >
-
-                                <label htmlFor="email-nuevo-miembro">
-                                    Email del usuario
-                                </label>
-
-                                <input
-                                    id="email-nuevo-miembro"
-                                    type="email"
-                                    value={emailNuevoMiembro}
-                                    onChange={(event) => {
-                                        setEmailNuevoMiembro(
-                                            event.target.value
-                                        );
-
-                                        if (errorMiembro) {
-                                            setErrorMiembro("");
-                                        }
-                                    }}
-                                    placeholder="ejemplo@gmail.com"
-                                    autoFocus
-                                />
-
-                                {errorMiembro && (
-                                    <p className="mensaje-error-miembro">
-                                        {errorMiembro}
-                                    </p>
-                                )}
-
-                                <div className="acciones-agregar-miembro">
-
-                                    <button
-                                        type="button"
-                                        className="boton-cancelar-miembro"
-                                        onClick={cancelarAgregarMiembro}
-                                        disabled={agregandoMiembro}
-                                    >
-                                        Cancelar
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        className="boton-confirmar-miembro"
-                                        disabled={agregandoMiembro}
-                                    >
-                                        {agregandoMiembro
-                                            ? "Agregando..."
-                                            : "Agregar"}
-                                    </button>
-
-                                </div>
-
-                            </form>
-
-                        )}
-
-                    </div>
-                )}
                     <div className="lista-miembros">
 
                         {miembros.length === 0 ? (
@@ -805,55 +941,80 @@ function Admin({ id }) {
 
                         ) : (
 
-                            miembros.map((miembro) => (
+                            miembros.map((miembro) => {
+                                const rolActual = modoEdicionPermisos
+                                    ? rolesPendientes[miembro.id] ?? miembro.rol
+                                    : miembro.rol;
 
-                                <div
-                                    className="miembro-item"
-                                    key={miembro.id}
-                                >
+                                return (
+                                    <div
+                                        className="miembro-item"
+                                        key={miembro.id}
+                                    >
 
-                                    <div className="miembro-avatar">
-                                        {miembro.nombre
-                                            .charAt(0)
-                                            .toUpperCase()}
-                                    </div>
+                                        <div className="miembro-avatar">
+                                            {miembro.nombre
+                                                .charAt(0)
+                                                .toUpperCase()}
+                                        </div>
 
-                                    <div className="miembro-info">
+                                        <div className="miembro-info">
 
-                                        <span className="miembro-nombre">
-                                            {miembro.nombre}
-                                        </span>
+                                            <span className="miembro-nombre">
+                                                {miembro.nombre}
+                                            </span>
 
-                                        <span
-                                            className={
-                                                miembro.rol === "admin"
-                                                    ? "miembro-rol admin"
-                                                    : "miembro-rol"
-                                            }
-                                        >
-                                            {miembro.rol === "admin"
-                                                ? "Administrador/a"
-                                                : "Miembro"}
-                                        </span>
-
-                                    </div>
-
-                                    {admin.rol === "admin" &&
-                                        Number(miembro.id) !== Number(id) && (
-                                            <button
-                                                type="button"
-                                                className="boton-eliminar-miembro"
-                                                onClick={() => abrirConfirmacionEliminarMiembro(miembro)}
-                                                aria-label={`Eliminar a ${miembro.nombre}`}
-                                                title={`Eliminar a ${miembro.nombre}`}
+                                            <span
+                                                className={
+                                                    rolActual === "admin"
+                                                        ? "miembro-rol admin"
+                                                        : "miembro-rol"
+                                                }
                                             >
-                                                Eliminar
-                                            </button>
+                                                {getRolEtiqueta(rolActual)}
+                                            </span>
+
+                                        </div>
+
+                                        {admin.rol === "admin" && Number(miembro.id) !== Number(id) && (
+                                            <div className="miembro-item-acciones">
+                                                {modoEdicionPermisos ? (
+                                                    <button
+                                                        type="button"
+                                                        className="miembro-toggle"
+                                                        onClick={() => {
+                                                            if (agregarMiembroAbierto) {
+                                                                cancelarAgregarMiembro();
+                                                            }
+                                                            cancelarEdicionPermisos();
+                                                            alternarRolMiembro(miembro.id);
+                                                        }}
+                                                    >
+                                                        {getRolEtiqueta(rolActual)}
+                                                    </button>
+                                                ) : modoEliminacion ? (
+                                                    <button
+                                                        type="button"
+                                                        className="boton-eliminar-miembro"
+                                                        onClick={(event) => {
+                                                            if (agregarMiembroAbierto) {
+                                                                cancelarAgregarMiembro();
+                                                            }
+                                                            event.stopPropagation();
+                                                            abrirConfirmacionEliminarMiembro(miembro);
+                                                        }}
+                                                        aria-label={`Eliminar a ${miembro.nombre}`}
+                                                        title={`Eliminar a ${miembro.nombre}`}
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                ) : null}
+                                            </div>
                                         )}
 
-                                </div>
-
-                            ))
+                                    </div>
+                                );
+                            })
 
                         )}
 
