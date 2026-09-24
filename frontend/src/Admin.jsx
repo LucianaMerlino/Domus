@@ -986,7 +986,6 @@ function Admin({ id }) {
                                                             if (agregarMiembroAbierto) {
                                                                 cancelarAgregarMiembro();
                                                             }
-                                                            cancelarEdicionPermisos();
                                                             alternarRolMiembro(miembro.id);
                                                         }}
                                                     >
