@@ -191,6 +191,24 @@ export async function agregarMiembro(hogarId, email, adminId) {
     return datos;
 }
 
+export async function crearHogar(usuarioId, nombre) {
+    const respuesta = await fetch(`${API_URL}/hogares`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ usuarioId, nombre })
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(datos.error || "No se pudo crear el hogar");
+    }
+
+    return datos;
+}
+
 export async function actualizarRolMiembro(hogarId, usuarioId, adminId, rol) {
     const respuesta = await fetch(
         `${API_URL}/hogares/${hogarId}/miembros/${usuarioId}/rol`,

@@ -22,7 +22,10 @@ router.post("/login", async (req, res) => {
             SELECT
                 u.id,
                 u.nombre,
-                u.rol,
+                CASE
+                    WHEN h.id IS NULL THEN 'integrante'
+                    ELSE u.rol
+                END AS rol,
                 h.id AS hogar_id,
                 h.nombre AS hogar
             FROM usuarios u

@@ -2,6 +2,108 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../config/database");
 
+// ======================================================
+// Crear un hogar y asignar al usuario como administrador
+// ======================================================
+router.post("/", async (req, res) => {
+    try {
+        const usuarioId = Number(req.body?.usuarioId ?? req.body?.id ?? req.body?.usuario_id);
+        const nombre = typeof req.body?.nombre === "string"
+            ? req.body.nombre.trim()
+            : "";
+
+        if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+            return res.status(400).json({
+                error: "El usuario indicado no es válido"
+            });
+        }
+
+        if (!nombre) {
+            return res.status(400).json({
+                error: "El nombre del hogar es obligatorio"
+            });
+        }
+
+        if (nombre.length > 100) {
+            return res.status(400).json({
+                error: "El nombre del hogar no puede superar los 100 caracteres"
+            });
+        }
+
+        const usuario = await pool.query(
+            `SELECT id, nombre, rol
+             FROM usuarios
+             WHERE id = $1`,
+            [usuarioId]
+        );
+
+        if (usuario.rows.length === 0) {
+            return res.status(404).json({
+                error: "Usuario no encontrado"
+            });
+        }
+
+        const nombreUsuario = usuario.rows[0].nombre;
+
+        const yaTieneHogar = await pool.query(
+            `SELECT 1
+             FROM miembros_hogar
+             WHERE usuario_id = $1
+             LIMIT 1`,
+            [usuarioId]
+        );
+
+        if (yaTieneHogar.rows.length > 0) {
+            return res.status(409).json({
+                error: "Este usuario ya pertenece a un hogar"
+            });
+        }
+
+        const hogarResultado = await pool.query(
+            `INSERT INTO hogares (nombre)
+             VALUES ($1)
+             RETURNING id, nombre`,
+            [nombre]
+        );
+
+        const hogar = hogarResultado.rows[0];
+
+        await pool.query(
+            `INSERT INTO miembros_hogar (hogar_id, usuario_id)
+             VALUES ($1, $2)`,
+            [hogar.id, usuarioId]
+        );
+
+        await pool.query(
+            `UPDATE usuarios
+             SET rol = 'admin'
+             WHERE id = $1`,
+            [usuarioId]
+        );
+
+        const tareasLimpias = await pool.query(
+            `UPDATE tareas
+             SET asignado_a = NULL,
+                 estado = 'Pendiente',
+                 completada = FALSE
+             WHERE asignado_a = $1
+             RETURNING id`,
+            [nombreUsuario]
+        );
+
+        res.status(201).json({
+            id: hogar.id,
+            nombre: hogar.nombre,
+            usuarioId,
+            tareasLimpias: tareasLimpias.rowCount || 0
+        });
+    } catch (error) {
+        console.error("Error al crear hogar:", error);
+        res.status(500).json({
+            error: "No se pudo crear el hogar"
+        });
+    }
+});
 
 // ======================================================
 // Obtener miembros de un hogar
@@ -362,6 +464,41 @@ router.delete("/:id/miembros/:usuarioId", async (req, res) => {
             return res.status(404).json({
                 error: "No se encontró ese miembro en el hogar"
             });
+        }
+
+        const sigueEnOtroHogar = await pool.query(
+            `SELECT 1
+             FROM miembros_hogar
+             WHERE usuario_id = $1
+             LIMIT 1`,
+            [usuarioId]
+        );
+
+        if (sigueEnOtroHogar.rows.length === 0) {
+            const usuarioActual = await pool.query(
+                `SELECT nombre
+                 FROM usuarios
+                 WHERE id = $1`,
+                [usuarioId]
+            );
+
+            if (usuarioActual.rows.length > 0) {
+                await pool.query(
+                    `UPDATE usuarios
+                     SET rol = 'integrante'
+                     WHERE id = $1`,
+                    [usuarioId]
+                );
+
+                await pool.query(
+                    `UPDATE tareas
+                     SET asignado_a = NULL,
+                         estado = 'Pendiente',
+                         completada = FALSE
+                     WHERE asignado_a = $1`,
+                    [usuarioActual.rows[0].nombre]
+                );
+            }
         }
 
         res.json({

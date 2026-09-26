@@ -22,7 +22,10 @@ router.get("/:id/perfil", async (req, res) => {
                 u.id,
                 u.nombre,
                 u.email,
-                u.rol,
+                CASE
+                    WHEN h.id IS NULL THEN 'integrante'
+                    ELSE u.rol
+                END AS rol,
                 h.id AS hogar_id,
                 h.nombre AS hogar
             FROM usuarios u

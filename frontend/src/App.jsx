@@ -20,7 +20,9 @@ function Home() {
         return <Navigate to="/login" replace />;
     }
 
-    return sesion.rol === "admin"
+    const tieneHogar = sesion?.hogar_id != null && Number(sesion.hogar_id) > 0;
+
+    return sesion.rol === "admin" && tieneHogar
         ? <Admin id={sesion.id} />
         : <Perfil id={sesion.id} />;
 }
