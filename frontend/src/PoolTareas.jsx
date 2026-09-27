@@ -48,6 +48,7 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
 
     // null = modal cerrado, "nueva" = creando, objeto = editando esa plantilla
     const [plantillaEnEdicion, setPlantillaEnEdicion] = useState(null);
+    const [plantillaSeleccionada, setPlantillaSeleccionada] = useState(null);
     const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
     const [errorFormulario, setErrorFormulario] = useState("");
     const [guardando, setGuardando] = useState(false);
@@ -71,21 +72,37 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
 
 
     function abrirNueva() {
+        setPlantillaSeleccionada(null);
         setFormulario(FORMULARIO_VACIO);
         setErrorFormulario("");
         setMensaje("");
         setPlantillaEnEdicion("nueva");
     }
 
-    function abrirEdicion(plantilla) {
+    function abrirDetalle(plantilla) {
+        setPlantillaSeleccionada(plantilla);
+        setPlantillaEnEdicion(null);
+        setErrorFormulario("");
+        setMensaje("");
+    }
+
+    function cerrarDetalle() {
+        setPlantillaSeleccionada(null);
+    }
+
+    function abrirEdicionDesdeDetalle() {
+        if (!plantillaSeleccionada) {
+            return;
+        }
+
         setFormulario({
-            nombre: plantilla.nombre,
-            descripcion: plantilla.descripcion || "",
-            puntos: String(plantilla.puntos)
+            nombre: plantillaSeleccionada.nombre,
+            descripcion: plantillaSeleccionada.descripcion || "",
+            puntos: String(plantillaSeleccionada.puntos)
         });
         setErrorFormulario("");
         setMensaje("");
-        setPlantillaEnEdicion(plantilla);
+        setPlantillaEnEdicion(plantillaSeleccionada);
     }
 
     function cerrarFormulario() {
@@ -246,15 +263,15 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
                         <div
                             className="fila-tarea"
                             key={plantilla.id}
-                            onClick={() => abrirEdicion(plantilla)}
+                            onClick={() => abrirDetalle(plantilla)}
                             onKeyDown={(event) => {
                                 if (event.key === "Enter" || event.key === " ") {
-                                    abrirEdicion(plantilla);
+                                    abrirDetalle(plantilla);
                                 }
                             }}
                             role="button"
                             tabIndex={0}
-                            title="Editar"
+                            title="Ver detalle"
                         >
 
                             <div className="fila-info">
@@ -298,6 +315,36 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
                         </div>
                     ))}
 
+                </div>
+            )}
+
+            {plantillaSeleccionada && !plantillaEnEdicion && (
+                <div className="modal-fondo">
+                    <div className="modal modal-detalle">
+                        <h2>{plantillaSeleccionada.nombre}</h2>
+
+                        <p className="detalle-descripcion">
+                            {plantillaSeleccionada.descripcion || "Sin descripción."}
+                        </p>
+
+                        <div className="detalle-datos">
+                            <div className="detalle-dato">
+                                <span className="detalle-etiqueta">Puntos</span>
+                                <span className="detalle-valor">
+                                    {plantillaSeleccionada.puntos ?? 0} pts
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="modal-botones">
+                            <button type="button" onClick={abrirEdicionDesdeDetalle}>
+                                Editar
+                            </button>
+                            <button type="button" onClick={cerrarDetalle}>
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
