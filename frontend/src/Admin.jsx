@@ -14,6 +14,7 @@ import {
 
 import BotonCerrarSesion from "./BotonCerrarSesion";
 import PoolTareas from "./PoolTareas";
+import RankingPuntos from "./RankingPuntos";
 
 // Fallback si el admin todavía no tiene un hogar asignado
 const HOGAR_POR_DEFECTO = 1;
@@ -446,6 +447,8 @@ function Admin({ id }) {
             </div>
 
             <p>Email: {admin.email}</p>
+
+            <RankingPuntos hogarId={hogarId} />
 
             <hr />
 

@@ -10,6 +10,7 @@ import {
 
 import { guardarSesion, obtenerSesion } from "./sesion";
 import BotonCerrarSesion from "./BotonCerrarSesion";
+import RankingPuntos from "./RankingPuntos";
 
 import "./Perfil.css";
 
@@ -318,6 +319,10 @@ function Perfil({ id }) {
 
             </section>
 
+
+            {perfil.hogar_id != null && (
+                <RankingPuntos hogarId={perfil.hogar_id} />
+            )}
 
             {!perfil.hogar && (
                 <section className="perfil-crear-hogar">

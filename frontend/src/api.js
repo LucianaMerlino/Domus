@@ -21,6 +21,16 @@ export async function obtenerMiembros(hogarId) {
     return respuesta.json();
 }
 
+export async function obtenerRanking(hogarId) {
+    const respuesta = await fetch(`${API_URL}/hogares/${hogarId}/ranking`);
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(datos.error || "No se pudo obtener el ranking del hogar");
+    }
+
+    return datos;
+}
 // Obtener todas las tareas
 export async function obtenerTareas({ estado, asignado, orden, hogar } = {}) {
     const parametros = new URLSearchParams();
@@ -189,7 +199,7 @@ export async function agregarMiembro(hogarId, email, adminId) {
     }
 
     return datos;
-}
+} 
 
 export async function crearHogar(usuarioId, nombre) {
     const respuesta = await fetch(`${API_URL}/hogares`, {
