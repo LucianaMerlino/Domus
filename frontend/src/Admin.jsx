@@ -24,6 +24,7 @@ function Admin({ id }) {
     const [hogarId, setHogarId] = useState(null);
     const [tareas, setTareas] = useState([]);
     const [miembros, setMiembros] = useState([]);
+    const [rankingAbierto, setRankingAbierto] = useState(false);
 
     function manejarTareaCreada(nuevaTarea) {
         setTareas((tareasActuales) => [nuevaTarea, ...tareasActuales]);
@@ -436,6 +437,21 @@ function Admin({ id }) {
                         </span>
 
                     </div>
+                    <button
+                        type="button"
+                        className="boton-ranking"
+                        onClick={() => setRankingAbierto(true)}
+                        aria-haspopup="dialog"
+                        aria-expanded={rankingAbierto}
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <rect className="ranking-icon-panel" x="1" y="1" width="22" height="22" rx="5" />
+                            <rect className="ranking-icon-barra ranking-icon-barra-uno" x="4" y="13" width="4" height="7" rx="1" />
+                            <rect className="ranking-icon-barra ranking-icon-barra-dos" x="10" y="8" width="4" height="12" rx="1" />
+                            <rect className="ranking-icon-barra ranking-icon-barra-tres" x="16" y="4" width="4" height="16" rx="1" />
+                        </svg>
+                        <span>Ranking</span>
+                    </button>
 
                 </div>
 
@@ -455,7 +471,29 @@ function Admin({ id }) {
 
             <p>Email: {admin.email}</p>
 
-            <RankingPuntos hogarId={hogarId} />
+            {rankingAbierto && (
+                <div className="ranking-modal-fondo" onClick={() => setRankingAbierto(false)}>
+                    <div
+                        className="ranking-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Ranking de puntos del hogar"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="ranking-modal-acciones">
+                            <button
+                                type="button"
+                                className="ranking-modal-cerrar"
+                                onClick={() => setRankingAbierto(false)}
+                                aria-label="Cerrar ranking"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <RankingPuntos hogarId={hogarId} />
+                    </div>
+                </div>
+            )}
 
             <hr />
 
