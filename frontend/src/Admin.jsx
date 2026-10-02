@@ -79,7 +79,7 @@ function Admin({ id }) {
             .catch((error) => setError(error.message));
     }, [id]);
 
-    // Se recarga al saber el hogar y cada vez que cambia un filtro
+    // Se recarga al saber el hogar, al cambiar los filtros y periódicamente.
     useEffect(() => {
         if (hogarId == null) {
             return;
@@ -87,28 +87,35 @@ function Admin({ id }) {
 
         let cancelado = false;
 
-        obtenerTareas({
-            hogar: hogarId,
-            estado: estado !== "Todos" ? estado : undefined,
-            asignado: asignado !== "Todos" ? asignado : undefined,
-            orden: orden || undefined
-        })
-            .then((datos) => {
+        async function cargarTareas() {
+            try {
+                const datos = await obtenerTareas({
+                    hogar: hogarId,
+                    estado: estado !== "Todos" ? estado : undefined,
+                    asignado: asignado !== "Todos" ? asignado : undefined,
+                    orden: orden || undefined
+                });
+
                 if (!cancelado) {
                     setTareas(datos);
+                    setTareaSeleccionada((seleccionada) => {
+                        if (!seleccionada) return null;
+                        return datos.find((tarea) => tarea.id === seleccionada.id) ?? null;
+                    });
                 }
-            })
-            .catch((error) => {
-                if (!cancelado) {
-                    setError(error.message);
-                }
-            });
+            } catch (error) {
+                if (!cancelado) setError(error.message);
+            }
+        }
+
+        cargarTareas();
+        const intervalo = window.setInterval(cargarTareas, 5000);
 
         return () => {
             cancelado = true;
+            window.clearInterval(intervalo);
         };
     }, [hogarId, estado, asignado, orden]);
-
     function getRolEtiqueta(rol) {
         return rol === "admin" ? "Administrador" : "Miembro";
     }

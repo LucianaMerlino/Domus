@@ -208,6 +208,24 @@
 }
 
 
+.perfil-busqueda-label {
+    display: block;
+    margin: 0 0 8px;
+    color: #bdbdbd;
+    font-size: 14px;
+}
+
+.perfil-busqueda-input {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    background: #111111;
+    color: #f5f5f5;
+    font: inherit;
+}
 /* =========================================================
    LISTA DE TAREAS
    ========================================================= */
