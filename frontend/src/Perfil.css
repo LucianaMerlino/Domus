@@ -669,3 +669,43 @@
         width: 100%;
     }
 }
+
+.perfil-controles-tareas {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+    align-items: end;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.perfil-controles-tareas .perfil-busqueda-input {
+    margin-bottom: 0;
+}
+
+.perfil-filtro-orden {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.perfil-filtro-orden label {
+    color: #bdbdbd;
+    font-size: 14px;
+}
+
+.perfil-filtro-orden select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    background: #111111;
+    color: #f5f5f5;
+    font: inherit;
+}
+
+@media (max-width: 640px) {
+    .perfil-controles-tareas {
+        grid-template-columns: 1fr;
+    }
+}

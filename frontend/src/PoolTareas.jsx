@@ -461,6 +461,7 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
                                 <label htmlFor="miembro-asignado">Miembro</label>
                                 <select
                                     id="miembro-asignado"
+                                    className="pool-asignar-select"
                                     value={miembroSeleccionado}
                                     onChange={(event) => setMiembroSeleccionado(event.target.value)}
                                 >
