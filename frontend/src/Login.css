@@ -99,3 +99,19 @@
     color: #ff8a8a;
     font-size: 14px;
 }
+
+.login-success {
+    margin: 0;
+    color: #8ee0a1;
+    font-size: 14px;
+}
+
+.login-card .login-mode-button {
+    margin-top: 0;
+    background: transparent;
+    color: #d2d0ee;
+}
+
+.login-card .login-mode-button:hover {
+    background: #26243a;
+}

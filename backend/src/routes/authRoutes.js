@@ -3,6 +3,50 @@ const router = express.Router();
 const pool = require("../config/database");
 
 // ======================================================
+// POST /api/auth/registro
+// Crea un usuario sin asignarlo a un hogar
+// ======================================================
+router.post("/registro", async (req, res) => {
+    try {
+        const usuario = typeof req.body?.usuario === "string"
+            ? req.body.usuario.trim()
+            : "";
+        const contrasena = typeof req.body?.contrasena === "string"
+            ? req.body.contrasena
+            : "";
+
+        if (!usuario || !contrasena) {
+            return res.status(400).json({
+                error: "Usuario y contraseña son obligatorios"
+            });
+        }
+
+        const resultado = await pool.query(
+            `
+            INSERT INTO usuarios (nombre, nombre_usuario, contrasena)
+            VALUES ($1, $1, $2)
+            RETURNING id, nombre_usuario
+            `,
+            [usuario, contrasena]
+        );
+
+        res.status(201).json({
+            id: resultado.rows[0].id,
+            usuario: resultado.rows[0].nombre_usuario,
+            mensaje: "Usuario creado con exito"
+        });
+
+    } catch (error) {
+        if (error.code === "23505") {
+            return res.status(409).json({ error: "Usuario ya existente" });
+        }
+
+        console.error("Error al registrar usuario:", error);
+        res.status(500).json({ error: "No se pudo registrar el usuario" });
+    }
+});
+
+// ======================================================
 // POST /api/auth/login
 // Valida usuario y contraseña y devuelve los datos
 // de la sesión (usuario + su hogar, si tiene)

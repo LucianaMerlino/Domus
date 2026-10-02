@@ -275,6 +275,27 @@ export async function login(usuario, contrasena) {
 }
 
 // ======================================================
+// Registrar usuario
+// ======================================================
+export async function registrarUsuario(usuario, contrasena) {
+    const respuesta = await fetch(`${API_URL}/auth/registro`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ usuario, contrasena })
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(datos.error || "No se pudo registrar el usuario");
+    }
+
+    return datos;
+}
+
+// ======================================================
 // Pool de tareas (plantillas) de un hogar
 // ======================================================
 async function pedirPlantillas(url, opciones, mensajeError) {
