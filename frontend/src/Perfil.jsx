@@ -20,6 +20,7 @@ function Perfil({ id }) {
     const [perfil, setPerfil] = useState(null);
     const [tareas, setTareas] = useState([]);
     const [busquedaTareas, setBusquedaTareas] = useState("");
+    const [ordenTareas, setOrdenTareas] = useState("");
     const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
@@ -218,6 +219,12 @@ function Perfil({ id }) {
         tarea.nombre.toLowerCase().includes(busquedaTareas.trim().toLowerCase())
     );
 
+    const tareasOrdenadas = [...tareasFiltradas].sort((tareaA, tareaB) => {
+        if (ordenTareas === "asc") return Number(tareaA.puntos) - Number(tareaB.puntos);
+        if (ordenTareas === "desc") return Number(tareaB.puntos) - Number(tareaA.puntos);
+        return 0;
+    });
+
     /*
      * Mientras se carga la información.
      */
@@ -411,20 +418,35 @@ function Perfil({ id }) {
                     Mis tareas
                 </h2>
 
-                <label className="perfil-busqueda-label" htmlFor="buscar-tarea-perfil">
-                    Buscar tarea
-                </label>
-                <input
-                    id="buscar-tarea-perfil"
-                    className="perfil-busqueda-input"
-                    type="search"
-                    value={busquedaTareas}
-                    onChange={(event) => setBusquedaTareas(event.target.value)}
-                    placeholder="Ingresá el nombre o parte del nombre"
-                />
+                <div className="perfil-controles-tareas">
+                    <div>
+                        <label className="perfil-busqueda-label" htmlFor="buscar-tarea-perfil">
+                            Buscar tarea
+                        </label>
+                        <input
+                            id="buscar-tarea-perfil"
+                            className="perfil-busqueda-input"
+                            type="search"
+                            value={busquedaTareas}
+                            onChange={(event) => setBusquedaTareas(event.target.value)}
+                            placeholder="Ingresá el nombre o parte del nombre"
+                        />
+                    </div>
+                    <div className="perfil-filtro-orden">
+                        <label htmlFor="orden-tareas-perfil">Puntos</label>
+                        <select
+                            id="orden-tareas-perfil"
+                            value={ordenTareas}
+                            onChange={(event) => setOrdenTareas(event.target.value)}
+                        >
+                            <option value="">Todos</option>
+                            <option value="asc">Menor a mayor</option>
+                            <option value="desc">Mayor a menor</option>
+                        </select>
+                    </div>
+                </div>
 
-
-                {tareasFiltradas.length === 0 ? (
+                {tareasOrdenadas.length === 0 ? (
 
                     /* Estado vacío */
 
@@ -441,7 +463,7 @@ function Perfil({ id }) {
                     <div className="perfil-lista-tareas">
 
 
-                        {tareasFiltradas.map((tarea) => (
+                        {tareasOrdenadas.map((tarea) => (
 
                             <button
                                 type="button"
