@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { login } from "./api";
+import { login, registrarUsuario } from "./api";
 import { guardarSesion } from "./sesion";
 
 import "./Login.css";
@@ -15,6 +15,8 @@ function Login() {
     const [contrasena, setContrasena] = useState("");
     const [error, setError] = useState("");
     const [enviando, setEnviando] = useState(false);
+    const [registrando, setRegistrando] = useState(false);
+    const [mensaje, setMensaje] = useState("");
 
 
     async function iniciarSesion(event) {
@@ -47,15 +49,43 @@ function Login() {
         }
     }
 
+    async function registrar(event) {
+        event.preventDefault();
+
+        if (!usuario.trim() || !contrasena) {
+            setError("Completá usuario y contraseña");
+            return;
+        }
+
+        try {
+            setEnviando(true);
+            setError("");
+            setMensaje("");
+
+            const resultado = await registrarUsuario(usuario.trim(), contrasena);
+            setMensaje(resultado.mensaje);
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setEnviando(false);
+        }
+    }
+
+    function alternarModo() {
+        setRegistrando(!registrando);
+        setError("");
+        setMensaje("");
+    }
+
 
     return (
         <div className="login-page">
 
-            <form className="login-card" onSubmit={iniciarSesion}>
+            <form className="login-card" onSubmit={registrando ? registrar : iniciarSesion}>
 
                 <h1>Domus</h1>
 
-                <label htmlFor="usuario">Usuario</label>
+                <label htmlFor="usuario">{registrando ? "Nombre de usuario" : "Usuario"}</label>
                 <input
                     id="usuario"
                     type="text"
@@ -79,8 +109,18 @@ function Login() {
                     <p className="login-error">{error}</p>
                 )}
 
+                {mensaje && (
+                    <p className="login-success" role="status">{mensaje}</p>
+                )}
+
                 <button type="submit" disabled={enviando}>
-                    {enviando ? "Ingresando..." : "Ingresar"}
+                    {enviando
+                        ? (registrando ? "Registrando..." : "Ingresando...")
+                        : (registrando ? "Registrar" : "Ingresar")}
+                </button>
+
+                <button type="button" className="login-mode-button" onClick={alternarModo}>
+                    {registrando ? "Volver a iniciar sesión" : "Crear una cuenta"}
                 </button>
 
             </form>
