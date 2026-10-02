@@ -106,6 +106,38 @@ router.post("/", async (req, res) => {
 });
 
 // ======================================================
+// Obtener el ranking de puntos del hogar
+// ======================================================
+router.get("/:id/ranking", async (req, res) => {
+    try {
+        const resultado = await pool.query(
+            `SELECT
+                u.id,
+                u.nombre,
+                COALESCE(SUM(t.puntos), 0) AS puntos
+             FROM miembros_hogar m
+             JOIN usuarios u ON u.id = m.usuario_id
+             LEFT JOIN tareas t
+                ON t.asignado_a = u.nombre
+               AND t.hogar_id = m.hogar_id
+               AND t.completada = TRUE
+             WHERE m.hogar_id = $1
+             GROUP BY u.id, u.nombre
+             ORDER BY u.nombre`,
+            [req.params.id]
+        );
+
+        res.json(resultado.rows.map((miembro) => ({
+            ...miembro,
+            puntos: Number(miembro.puntos)
+        })));
+    } catch (error) {
+        console.error("Error al obtener el ranking del hogar:", error);
+        res.status(500).json({ error: "No se pudo obtener el ranking del hogar" });
+    }
+});
+
+// ======================================================
 // Obtener miembros de un hogar
 // ======================================================
 router.get("/:id/miembros", async (req, res) => {

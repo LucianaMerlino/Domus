@@ -10,6 +10,7 @@ import {
 
 import { guardarSesion, obtenerSesion } from "./sesion";
 import BotonCerrarSesion from "./BotonCerrarSesion";
+import RankingPuntos from "./RankingPuntos";
 
 import "./Perfil.css";
 
@@ -19,6 +20,7 @@ function Perfil({ id }) {
 
     const [perfil, setPerfil] = useState(null);
     const [tareas, setTareas] = useState([]);
+    const [busquedaTareas, setBusquedaTareas] = useState("");
     const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
@@ -29,6 +31,33 @@ function Perfil({ id }) {
 
     useEffect(() => {
         cargarPerfil();
+    }, [id]);
+
+    useEffect(() => {
+        let cancelado = false;
+
+        async function actualizarPerfilYTareas() {
+            try {
+                const [datosPerfil, datosTareas] = await Promise.all([
+                    obtenerPerfil(id),
+                    obtenerTareasUsuario(id, "pendiente")
+                ]);
+
+                if (!cancelado) {
+                    setPerfil(datosPerfil);
+                    setTareas(datosTareas);
+                }
+            } catch (error) {
+                if (!cancelado) setError(error.message);
+            }
+        }
+
+        const intervalo = window.setInterval(actualizarPerfilYTareas, 5000);
+
+        return () => {
+            cancelado = true;
+            window.clearInterval(intervalo);
+        };
     }, [id]);
 
 
@@ -142,14 +171,10 @@ function Perfil({ id }) {
 
 
             /*
-             * La tarea deja de aparecer en
-             * "Mis tareas pendientes".
+             * La tarea completada deja la lista de pendientes.
              */
             setTareas((tareasActuales) =>
-                tareasActuales.filter(
-                    (tarea) =>
-                        tarea.id !== tareaRealizada.id
-                )
+                tareasActuales.filter((tarea) => tarea.id !== tareaRealizada.id)
             );
 
 
@@ -189,6 +214,10 @@ function Perfil({ id }) {
         return "perfil-estado pendiente";
     }
 
+
+    const tareasFiltradas = tareas.filter((tarea) =>
+        tarea.nombre.toLowerCase().includes(busquedaTareas.trim().toLowerCase())
+    );
 
     /*
      * Mientras se carga la información.
@@ -319,6 +348,10 @@ function Perfil({ id }) {
             </section>
 
 
+            {perfil.hogar_id != null && (
+                <RankingPuntos hogarId={perfil.hogar_id} />
+            )}
+
             {!perfil.hogar && (
                 <section className="perfil-crear-hogar">
                     {!mostrarFormularioHogar ? (
@@ -373,24 +406,36 @@ function Perfil({ id }) {
             )}
 
             {/* =================================================
-                TAREAS PENDIENTES
+                TAREAS DEL USUARIO
                 ================================================= */}
 
             <section className="perfil-tareas">
 
 
                 <h2>
-                    Mis tareas pendientes
+                    Mis tareas
                 </h2>
 
+                <label className="perfil-busqueda-label" htmlFor="buscar-tarea-perfil">
+                    Buscar tarea
+                </label>
+                <input
+                    id="buscar-tarea-perfil"
+                    className="perfil-busqueda-input"
+                    type="search"
+                    value={busquedaTareas}
+                    onChange={(event) => setBusquedaTareas(event.target.value)}
+                    placeholder="Ingresá el nombre o parte del nombre"
+                />
 
-                {tareas.length === 0 ? (
+
+                {tareasFiltradas.length === 0 ? (
 
                     /* Estado vacío */
 
                     <div className="perfil-vacio">
 
-                        No tenés tareas asignadas
+                        {busquedaTareas.trim() ? "No se encontraron tareas relacionadas" : "No tenés tareas asignadas"}
 
                     </div>
 
@@ -401,7 +446,7 @@ function Perfil({ id }) {
                     <div className="perfil-lista-tareas">
 
 
-                        {tareas.map((tarea) => (
+                        {tareasFiltradas.map((tarea) => (
 
                             <button
                                 type="button"
@@ -555,13 +600,15 @@ function Perfil({ id }) {
                             </button>
 
 
-                            <button
-                                type="button"
-                                className="btn-realizar"
-                                onClick={realizarTarea}
-                            >
-                                Marcar como realizada
-                            </button>
+                            {!tareaSeleccionada.completada && tareaSeleccionada.estado?.toLowerCase() !== "realizada" && (
+                                <button
+                                    type="button"
+                                    className="btn-realizar"
+                                    onClick={realizarTarea}
+                                >
+                                    Marcar como realizada
+                                </button>
+                            )}
 
 
                         </div>
