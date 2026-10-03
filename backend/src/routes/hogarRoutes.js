@@ -547,4 +547,172 @@ router.delete("/:id/miembros/:usuarioId", async (req, res) => {
 });
 
 
+// ======================================================
+// PUT /api/hogares/:id/nombre
+// Editar nombre del hogar
+// ======================================================
+router.put("/:id/nombre", async (req, res) => {
+    try {
+        const hogarId = Number(req.params.id);
+        const usuarioId = Number(req.body?.usuarioId);
+        const nombre = typeof req.body?.nombre === "string"
+            ? req.body.nombre.trim()
+            : "";
+
+        if (!Number.isInteger(hogarId) || hogarId <= 0) {
+            return res.status(400).json({
+                error: "El hogar indicado no es válido"
+            });
+        }
+
+        if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+            return res.status(400).json({
+                error: "El usuario indicado no es válido"
+            });
+        }
+
+        if (nombre === "") {
+            return res.status(400).json({
+                error: "El nombre del hogar no puede quedar vacío."
+            });
+        }
+
+        if (nombre.length > 100) {
+            return res.status(400).json({
+                error: "El nombre del hogar no puede superar los 100 caracteres"
+            });
+        }
+
+        // Verificar que el usuario sea administrador de ESE hogar
+        const administrador = await pool.query(
+            `
+            SELECT u.id
+            FROM miembros_hogar mh
+            JOIN usuarios u
+                ON u.id = mh.usuario_id
+            WHERE mh.hogar_id = $1
+              AND u.id = $2
+              AND u.rol = 'admin'
+            `,
+            [hogarId, usuarioId]
+        );
+
+        if (administrador.rows.length === 0) {
+            return res.status(403).json({
+                error: "Solo el administrador puede modificar el nombre del hogar"
+            });
+        }
+
+        const resultado = await pool.query(
+            `
+            UPDATE hogares
+            SET nombre = $1
+            WHERE id = $2
+            RETURNING id, nombre, icono
+            `,
+            [nombre, hogarId]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                error: "No se encontró el hogar"
+            });
+        }
+
+        res.json(resultado.rows[0]);
+
+    } catch (error) {
+        console.error("Error al actualizar nombre del hogar:", error);
+
+        res.status(500).json({
+            error: "No se pudo actualizar el nombre del hogar"
+        });
+    }
+});
+
+
+// ======================================================
+// PUT /api/hogares/:id/icono
+// Editar ícono del hogar
+// ======================================================
+router.put("/:id/icono", async (req, res) => {
+    try {
+        const hogarId = Number(req.params.id);
+        const usuarioId = Number(req.body?.usuarioId);
+        const icono = typeof req.body?.icono === "string"
+            ? req.body.icono.trim()
+            : "";
+
+        const iconosDisponibles = [
+            "🏠",
+            "🏡",
+            "🏢",
+            "🏘️"
+        ];
+
+        if (!Number.isInteger(hogarId) || hogarId <= 0) {
+            return res.status(400).json({
+                error: "El hogar indicado no es válido"
+            });
+        }
+
+        if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+            return res.status(400).json({
+                error: "El usuario indicado no es válido"
+            });
+        }
+
+        if (!iconosDisponibles.includes(icono)) {
+            return res.status(400).json({
+                error: "El ícono seleccionado no es válido"
+            });
+        }
+
+        const administrador = await pool.query(
+            `
+            SELECT u.id
+            FROM miembros_hogar mh
+            JOIN usuarios u
+                ON u.id = mh.usuario_id
+            WHERE mh.hogar_id = $1
+              AND u.id = $2
+              AND u.rol = 'admin'
+            `,
+            [hogarId, usuarioId]
+        );
+
+        if (administrador.rows.length === 0) {
+            return res.status(403).json({
+                error: "Solo el administrador puede modificar el ícono del hogar"
+            });
+        }
+
+        const resultado = await pool.query(
+            `
+            UPDATE hogares
+            SET icono = $1
+            WHERE id = $2
+            RETURNING id, nombre, icono
+            `,
+            [icono, hogarId]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                error: "No se encontró el hogar"
+            });
+        }
+
+        res.json(resultado.rows[0]);
+
+    } catch (error) {
+        console.error("Error al actualizar ícono del hogar:", error);
+
+        res.status(500).json({
+            error: "No se pudo actualizar el ícono del hogar"
+        });
+    }
+});
+
+
 module.exports = router;

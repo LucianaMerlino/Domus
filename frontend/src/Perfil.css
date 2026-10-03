@@ -709,3 +709,29 @@
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Navegación Perfil -> Home */
+.perfil-btn-home { border: 1px solid #5b55a5; background: #25213b; color: #eeedff; border-radius: 10px; padding: 9px 14px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease, transform 0.2s ease; }
+.perfil-btn-home:hover { background: #302a4d; transform: translateY(-1px); }
+
+
+/* Confirmación al completar una tarea desde el perfil. */
+.perfil-exito {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: #17351f;
+    border: 1px solid #2f7040;
+    color: #b9f4c7;
+    font-size: 16px;
+    text-align: center;
+}
+
+/* Corrección final: detalle de tarea completamente centrado */
+.perfil-modal { text-align: center; }
+.perfil-modal h3 { text-align: center; }
+.perfil-modal-info { width:100%; justify-content:center; align-items:center; margin:0 auto 20px; }
+.perfil-modal-descripcion { width:100%; text-align:center; }
+.perfil-modal-acciones { justify-content:center; width:100%; }

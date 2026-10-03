@@ -14,8 +14,11 @@ import BotonCerrarSesion from "./BotonCerrarSesion";
 import "./Perfil.css";
 
 
-function Perfil({ id }) {
+function Perfil() {
     const navigate = useNavigate();
+
+    const sesion = obtenerSesion();
+    const id = sesion?.id;
 
     const [perfil, setPerfil] = useState(null);
     const [tareas, setTareas] = useState([]);
@@ -24,6 +27,7 @@ function Perfil({ id }) {
     const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
+    const [mensajeExito, setMensajeExito] = useState("");
     const [mostrarFormularioHogar, setMostrarFormularioHogar] = useState(false);
     const [nombreHogar, setNombreHogar] = useState("");
     const [creandoHogar, setCreandoHogar] = useState(false);
@@ -151,6 +155,7 @@ function Perfil({ id }) {
         try {
 
             setError("");
+            setMensajeExito("");
 
             const tareaRealizada = await marcarTareaRealizada(
                 tareaSeleccionada.id
@@ -182,6 +187,13 @@ function Perfil({ id }) {
              * Cerramos el modal.
              */
             setTareaSeleccionada(null);
+
+            const puntosGanados = Number(tareaRealizada.puntos || 0);
+            setMensajeExito(
+                puntosGanados === 1
+                    ? "¡Tarea marcada como realizada! Sumaste 1 punto."
+                    : `¡Tarea marcada como realizada! Sumaste ${puntosGanados} puntos.`
+            );
 
         } catch (error) {
 
@@ -319,6 +331,14 @@ function Perfil({ id }) {
                     {/* Rol + cerrar sesión */}
 
                     <div className="header-acciones">
+
+                        <button
+                            type="button"
+                            className="perfil-btn-home"
+                            onClick={() => navigate("/")}
+                        >
+                            🏠 Home
+                        </button>
 
                         <div className="perfil-rol">
 
@@ -526,6 +546,10 @@ function Perfil({ id }) {
             {/* =================================================
                 ERROR
                 ================================================= */}
+
+            {mensajeExito && (
+                <p className="perfil-exito">{mensajeExito}</p>
+            )}
 
             {error && (
 

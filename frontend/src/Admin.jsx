@@ -19,7 +19,7 @@ import RankingPuntos from "./RankingPuntos";
 // Fallback si el admin todavía no tiene un hogar asignado
 const HOGAR_POR_DEFECTO = 1;
 
-function Admin({ id }) {
+function Admin({ id, embebido = false }) {
     const [admin, setAdmin] = useState(null);
     const [hogarId, setHogarId] = useState(null);
     const [tareas, setTareas] = useState([]);
@@ -343,13 +343,17 @@ function Admin({ id }) {
         setGuardandoEdicion(true);
 
         try {
-            const tareaActualizada = await actualizarTarea(tareaSeleccionada.id, {
-                nombre: tituloEdicion.trim(),
-                descripcion: descripcionEdicion.trim(),
-                estado: estadoEdicion,
-                asignado_a: asignadoEdicion || null,
-                puntos: puntosNumero
-            });
+            const tareaActualizada = await actualizarTarea(
+                tareaSeleccionada.id,
+                {
+                    nombre: tituloEdicion.trim(),
+                    descripcion: descripcionEdicion.trim(),
+                    estado: estadoEdicion,
+                    asignado_a: asignadoEdicion || null,
+                    puntos: puntosNumero
+                },
+                id
+            );
 
             setTareas((tareasActuales) =>
                 tareasActuales.map((tarea) =>
@@ -377,7 +381,7 @@ function Admin({ id }) {
 
     async function confirmarEliminacion() {
         try {
-            await eliminarTarea(tareaAEliminar.id);
+            await eliminarTarea(tareaAEliminar.id, id);
 
             setTareas((tareasActuales) =>
                 tareasActuales.filter(
@@ -412,6 +416,7 @@ function Admin({ id }) {
     return (
         <div className="admin-container">
 
+            {!embebido && (<>
             <h1>Domus</h1>
 
             <div className="home-usuario-header">
@@ -470,6 +475,16 @@ function Admin({ id }) {
             </div>
 
             <p>Email: {admin.email}</p>
+            </>)}
+
+            {embebido && (
+                <div className="tareas-hogar-header">
+                    <h2>Administración del hogar</h2>
+                    <button type="button" className="boton-ranking" onClick={() => setRankingAbierto(true)}>
+                        <span>Ranking</span>
+                    </button>
+                </div>
+            )}
 
             {rankingAbierto && (
                 <div className="ranking-modal-fondo" onClick={() => setRankingAbierto(false)}>

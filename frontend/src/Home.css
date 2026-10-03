@@ -1,0 +1,165 @@
+
+/* Home compartido: la información es idéntica para admin e integrante. */
+.home-contenedor { width: min(100% - 32px, 980px); margin: 0 auto; }
+.home-contenedor > h1 { text-align: center; margin-bottom: 18px; }
+.home-cabecera-completa {
+  width: 100%; box-sizing: border-box; display: flex; align-items: center;
+  justify-content: space-between; gap: 20px; padding: 14px 18px; margin-bottom: 14px;
+  background: #2b2b2b; border: 1px solid #3a3a3a; border-radius: 12px;
+}
+.home-identidad, .home-editar-nombre { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.home-nombre-hogar { font-weight: 600; white-space: nowrap; }
+.home-rol-linea { display: flex; margin: 0 0 22px; }
+.home-rol-linea .home-rol { width: 100%; text-align: center; }
+.home-tareas-barra { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:30px 0 10px; }
+.home-tareas-barra > div { display:flex; align-items:center; gap:12px; }
+.home-tareas-barra h2 { margin:0; }
+.home-tabs { margin-bottom: 12px; }
+.home-tareas-compartidas { margin-top: 0; }
+.home-iconos { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin:22px 0; }
+.home-iconos button { min-height:72px; font-size:32px; }
+@media (max-width:700px) {
+  .home-contenedor { width:min(100% - 20px, 980px); }
+  .home-cabecera-completa { align-items:flex-start; flex-direction:column; }
+  .home-cabecera-completa .header-acciones { width:100%; justify-content:flex-end; }
+  .home-tareas-barra { align-items:flex-start; }
+  .home-tareas-barra > div { align-items:flex-start; flex-direction:column; }
+}
+
+
+/* Detalle de tarea del Home: conserva la estética visual del Perfil. */
+.home-modal-asignado { margin: 8px 0 0; color: #d2d2d2; font-size: 15px; }
+
+
+/* =========================================================
+   MODAL DE TAREA DEL HOME
+   Un solo diseño para detalle y edición, centrado y ordenado.
+   ========================================================= */
+.perfil-modal-overlay {
+  z-index: 5000;
+}
+
+.home-task-modal {
+  width: min(92vw, 560px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  text-align: center;
+  padding: 32px;
+}
+
+.home-task-modal > h3,
+.home-task-modal .home-edit-form > h3 {
+  text-align: center;
+  margin: 0 0 22px;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.home-task-modal .perfil-modal-info {
+  justify-content: center;
+  margin: 0 auto 22px;
+}
+
+.home-task-modal .perfil-modal-descripcion {
+  width: 100%;
+  margin: 0 auto 22px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.home-task-modal .home-modal-asignado {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.home-task-modal .perfil-modal-acciones {
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.home-edit-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+}
+
+.home-edit-form .form-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin: 0;
+  text-align: left;
+}
+
+.home-edit-form .form-group label {
+  display: block;
+  margin: 0;
+  color: #d5d5d5;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.home-edit-form .form-group input,
+.home-edit-form .form-group textarea,
+.home-edit-form .form-group select {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid #444;
+  border-radius: 9px;
+  background: #292929;
+  color: #f2f2f2;
+  font: inherit;
+}
+
+.home-edit-form .form-group textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.home-edit-form .form-group input:focus,
+.home-edit-form .form-group textarea:focus,
+.home-edit-form .form-group select:focus {
+  outline: 2px solid #7771c7;
+  outline-offset: 1px;
+}
+
+.home-edit-form .mensaje-error {
+  margin: 0;
+  text-align: center;
+}
+
+.home-edit-form .perfil-modal-acciones {
+  margin-top: 4px;
+}
+
+/* Gestión de miembros (funcionalidad histórica, disponible solo para admin) */
+.home-integrantes-acciones { display:flex; align-items:center; gap:10px; }
+.boton-gestionar-miembros { border:1px solid #4c456f; background:#232135; color:#d8d1ff; border-radius:8px; padding:8px 12px; cursor:pointer; }
+.modal-miembros { width:430px; max-width:90vw; padding:0; overflow:hidden; text-align:left; }
+.modal-miembros-header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; background:#222; border-radius:10px 10px 0 0; }
+.modal-miembros-header h2 { margin:0; color:#fff; font-size:20px; }
+.cerrar-modal-miembros { display:flex; align-items:center; justify-content:center; width:32px; height:32px; padding:0; background:transparent; color:#b0b0b5; font-size:26px; cursor:pointer; border-radius:50%; }
+.agregar-miembro-container { padding:16px 24px; background:#18181a; border-bottom:1px solid #29292c; }
+.boton-agregar-miembro { width:100%; padding:10px 16px; border:1px solid #4c456f; border-radius:8px; background:#232135; color:#a89cf5; cursor:pointer; }
+.form-agregar-miembro { display:flex; flex-direction:column; gap:8px; }
+.form-agregar-miembro label { color:#d0d0d3; font-size:14px; font-weight:500; }
+.form-agregar-miembro input { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #3a3a3e; border-radius:7px; background:#101012; color:#f5f5f5; }
+.mensaje-error-miembro { margin:2px 0 4px; color:#ff7b7b; font-size:13px; }
+.acciones-agregar-miembro,.modal-miembros-acciones { display:flex; justify-content:flex-end; gap:8px; }
+.acciones-agregar-miembro { margin-top:4px; }
+.modal-miembros-acciones { padding:16px 24px 12px; background:#18181a; border-bottom:1px solid #29292c; }
+.boton-cancelar-miembro,.boton-confirmar-miembro,.boton-editar-permisos,.boton-cancelar-miembros { padding:8px 14px; border-radius:7px; cursor:pointer; }
+.boton-confirmar-miembro,.boton-editar-permisos { border:1px solid #4c456f; background:#7165c7; color:#fff; }
+.boton-cancelar-miembro,.boton-cancelar-miembros { border:1px solid #3a3a3e; background:transparent; color:#d0d0d3; }
+.modal-miembros .lista-miembros { padding:10px 0; background:#131315; }
+.modal-miembros .miembro-item { display:flex; align-items:center; gap:14px; padding:14px 24px; border-bottom:1px solid #232326; }
+.miembro-item-acciones { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.miembro-toggle { border:1px solid #4c456f; border-radius:7px; background:#232135; color:#d8d1ff; padding:8px 12px; cursor:pointer; }
+.boton-eliminar-miembro { padding:8px 12px; border:1px solid #5a3d3d; border-radius:7px; background:#2a1b1d; color:#ffb0b0; cursor:pointer; }
+@media (max-width:600px) { .home-integrantes-acciones { align-items:flex-end; flex-direction:column; } .miembro-item-acciones { flex-direction:column; } }

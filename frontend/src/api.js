@@ -74,9 +74,11 @@ export async function crearTarea(tarea) {
 }
 
 //Eliminar una tarea
-export async function eliminarTarea(id) {
+export async function eliminarTarea(id, usuarioId) {
   const respuesta = await fetch(`${API_URL}/tasks/${id}`, {
-    method: "DELETE"
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ usuarioId })
   });
 
   const datos = await respuesta.json();
@@ -89,19 +91,24 @@ export async function eliminarTarea(id) {
 }
 
 // Actualizar una tarea existente
-export async function actualizarTarea(id, tarea) {
+export async function actualizarTarea(id, tarea, usuarioId) {
     const respuesta = await fetch(`${API_URL}/tasks/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(tarea),
+        body: JSON.stringify({
+            ...tarea,
+            usuarioId
+        }),
     });
 
     const datos = await respuesta.json();
 
     if (!respuesta.ok) {
-        throw new Error(datos.error || "No se pudo actualizar la tarea");
+        throw new Error(
+            datos.error || "No se pudo actualizar la tarea"
+        );
     }
 
     return datos;
@@ -119,6 +126,86 @@ export async function obtenerPerfil(id) {
     if (!respuesta.ok) {
         throw new Error(
             datos.error || "No se pudo obtener el perfil"
+        );
+    }
+
+    return datos;
+}
+
+
+// ======================================================
+// Información general del Home
+// ======================================================
+export async function obtenerHome(id) {
+    const respuesta = await fetch(
+        `${API_URL}/usuarios/${id}/home`
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.error || "No se pudo obtener la información del hogar"
+        );
+    }
+
+    return datos;
+}
+
+
+// ======================================================
+// Actualizar nombre del hogar
+// ======================================================
+export async function actualizarNombreHogar(hogarId, usuarioId, nombre) {
+    const respuesta = await fetch(
+        `${API_URL}/hogares/${hogarId}/nombre`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                usuarioId,
+                nombre
+            })
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.error || "No se pudo actualizar el nombre del hogar"
+        );
+    }
+
+    return datos;
+}
+
+
+// ======================================================
+// Actualizar ícono del hogar
+// ======================================================
+export async function actualizarIconoHogar(hogarId, usuarioId, icono) {
+    const respuesta = await fetch(
+        `${API_URL}/hogares/${hogarId}/icono`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                usuarioId,
+                icono
+            })
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.error || "No se pudo actualizar el ícono del hogar"
         );
     }
 

@@ -166,4 +166,113 @@ router.get("/:id/tareas", async (req, res) => {
 });
 
 
+// ======================================================
+// GET /api/usuarios/:id/home
+// Información general del hogar del usuario
+// ======================================================
+router.get("/:id/home", async (req, res) => {
+    try {
+        const usuarioId = Number(req.params.id);
+
+        if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+            return res.status(400).json({
+                error: "El id del usuario no es válido"
+            });
+        }
+
+        // Primero verificamos a qué hogar pertenece el usuario
+        const hogarResultado = await pool.query(
+            `
+            SELECT
+                h.id,
+                h.nombre,
+                h.icono,
+                u.rol
+            FROM miembros_hogar mh
+            JOIN hogares h
+                ON h.id = mh.hogar_id
+            JOIN usuarios u
+                ON u.id = mh.usuario_id
+            WHERE mh.usuario_id = $1
+            LIMIT 1
+            `,
+            [usuarioId]
+        );
+
+        // Usuario válido pero sin hogar
+        if (hogarResultado.rows.length === 0) {
+            return res.json({
+                hogar: null,
+                integrantes: [],
+                cantidad_integrantes: 0,
+                tareas: [],
+                cantidad_tareas_realizadas: 0
+            });
+        }
+
+        const hogar = hogarResultado.rows[0];
+
+        // Integrantes del hogar
+        const integrantesResultado = await pool.query(
+            `
+            SELECT
+                u.id,
+                u.nombre,
+                u.rol
+            FROM miembros_hogar mh
+            JOIN usuarios u
+                ON u.id = mh.usuario_id
+            WHERE mh.hogar_id = $1
+            ORDER BY u.nombre
+            `,
+            [hogar.id]
+        );
+
+        // Tareas del hogar
+        const tareasResultado = await pool.query(
+            `
+            SELECT
+                t.id,
+                t.nombre,
+                t.descripcion,
+                t.puntos,
+                t.estado,
+                t.completada,
+                t.asignado_a
+            FROM tareas t
+            WHERE t.hogar_id = $1
+            ORDER BY t.id DESC
+            `,
+            [hogar.id]
+        );
+
+        const tareasRealizadas = tareasResultado.rows.filter(
+            (tarea) =>
+                tarea.completada === true ||
+                tarea.estado === "Realizada"
+        ).length;
+
+        res.json({
+            hogar: {
+                id: hogar.id,
+                nombre: hogar.nombre,
+                icono: hogar.icono,
+                rol: hogar.rol
+            },
+            integrantes: integrantesResultado.rows,
+            cantidad_integrantes: integrantesResultado.rows.length,
+            tareas: tareasResultado.rows,
+            cantidad_tareas_realizadas: tareasRealizadas
+        });
+
+    } catch (error) {
+        console.error("Error al obtener información del Home:", error);
+
+        res.status(500).json({
+            error: "No se pudo obtener la información del hogar"
+        });
+    }
+});
+
+
 module.exports = router;

@@ -60,9 +60,9 @@ router.post("/", async (req, res) => {
         }
 
         const puntosNumero = Number(puntos);
-        if (!Number.isInteger(puntosNumero) || puntosNumero < 0) {
+        if (!Number.isInteger(puntosNumero) || puntosNumero <= 0) {
             return res.status(400).json({
-                error: "Los puntos deben ser un número entero mayor o igual a 0"
+                error: "Los puntos deben ser un número entero mayor a 0"
             });
         }
 
@@ -241,7 +241,7 @@ router.put("/:id/realizada", async (req, res) => {
 router.put("/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, puntos, estado, asignado_a } = req.body;
+        const { nombre, descripcion, puntos, estado, asignado_a, usuarioId } = req.body;
 
         if (!nombre || nombre.trim() === "") {
             return res.status(400).json({
@@ -286,6 +286,24 @@ router.put("/:id", async (req, res) => {
         }
 
         const hogarId = tareaResultado.rows[0].hogar_id;
+
+        const administrador = await pool.query(
+            `SELECT u.id
+            FROM miembros_hogar mh
+            JOIN usuarios u
+                ON u.id = mh.usuario_id
+            WHERE mh.hogar_id = $1
+            AND u.id = $2
+            AND u.rol = 'admin'`,
+            [hogarId, usuarioId]
+        );
+
+        if (administrador.rows.length === 0) {
+            return res.status(403).json({
+                error: "Solo el administrador puede modificar las tareas"
+            });
+        }
+
         const asignadoLimpio = typeof asignado_a === "string" && asignado_a.trim() !== ""
             ? asignado_a.trim()
             : null;
@@ -339,6 +357,34 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const usuarioId = Number(req.body?.usuarioId);
+
+    if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+      return res.status(403).json({ error: "No se pudo identificar al administrador" });
+    }
+
+    const tareaResultado = await pool.query(
+      "SELECT hogar_id FROM tareas WHERE id = $1",
+      [id]
+    );
+
+    if (tareaResultado.rows.length === 0) {
+      return res.status(404).json({ error: "No se encontró la tarea" });
+    }
+
+    const administrador = await pool.query(
+      `SELECT 1
+       FROM miembros_hogar mh
+       JOIN usuarios u ON u.id = mh.usuario_id
+       WHERE mh.hogar_id = $1
+         AND u.id = $2
+         AND u.rol = 'admin'`,
+      [tareaResultado.rows[0].hogar_id, usuarioId]
+    );
+
+    if (administrador.rows.length === 0) {
+      return res.status(403).json({ error: "Solo el administrador puede eliminar tareas" });
+    }
 
     const resultado = await pool.query(
       "DELETE FROM tareas WHERE id = $1 RETURNING id",
