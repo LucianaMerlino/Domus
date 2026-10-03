@@ -334,10 +334,13 @@ function Perfil() {
 
                         <button
                             type="button"
-                            className="perfil-btn-home"
+                            className="perfil-inicio"
                             onClick={() => navigate("/")}
                         >
-                            🏠 Home
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />
+                            </svg>
+                            <span>Inicio</span>
                         </button>
 
                         <div className="perfil-rol">
