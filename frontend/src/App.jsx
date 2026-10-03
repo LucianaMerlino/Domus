@@ -7,6 +7,7 @@ import {
 
 import Home from "./Home";
 import Perfil from "./Perfil";
+import Estadisticas from "./Estadisticas";
 import Login from "./Login";
 import { obtenerSesion } from "./sesion";
 
@@ -30,6 +31,16 @@ function PerfilRuta() {
     return <Perfil />;
 }
 
+function EstadisticasRuta() {
+    const sesion = obtenerSesion();
+
+    if (!sesion) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return <Estadisticas id={sesion.id} />;
+}
+
 function App() {
     return (
         <BrowserRouter>
@@ -47,6 +58,11 @@ function App() {
                 <Route
                     path="/perfil"
                     element={<PerfilRuta />}
+                />
+
+                <Route
+                    path="/estadisticas"
+                    element={<EstadisticasRuta />}
                 />
 
                 <Route

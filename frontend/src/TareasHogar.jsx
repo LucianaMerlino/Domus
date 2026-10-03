@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { obtenerTareas, actualizarTarea, eliminarTarea } from "./api";
 import PoolTareas from "./PoolTareas";
-import RankingPuntos from "./RankingPuntos";
 import "./Perfil.css";
 
-function TareasHogar({ hogarId, usuarioId, miembros, esAdmin, realizadasInicial = 0 }) {
+function TareasHogar({ hogarId, usuarioId, miembros, esAdmin }) {
   const [tareas, setTareas] = useState([]);
   const [estado, setEstado] = useState("Todos");
   const [asignado, setAsignado] = useState("Todos");
   const [orden, setOrden] = useState("");
   const [seccion, setSeccion] = useState("tareas");
-  const [rankingAbierto, setRankingAbierto] = useState(false);
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [tareaAEliminar, setTareaAEliminar] = useState(null);
@@ -73,23 +71,15 @@ function TareasHogar({ hogarId, usuarioId, miembros, esAdmin, realizadasInicial 
     } catch (e) { setError(e.message); }
   }
 
-  // Este contador representa el total real del hogar y NO cambia con los filtros.
-  const realizadasTotales = Number(realizadasInicial || 0);
-  const textoRealizadas = realizadasTotales === 1
-    ? "1 realizada"
-    : `${realizadasTotales} realizadas`;
-
   return <>
     <div className="home-tareas-barra">
       <div>
         <h2>Tareas del hogar</h2>
-        <span className="badge-puntos">{textoRealizadas}</span>
       </div>
-      <button type="button" className="boton-ranking" onClick={() => setRankingAbierto(true)}>Ranking</button>
     </div>
 
     {esAdmin && <div className="tabs-admin home-tabs">
-      <button type="button" className={seccion === "tareas" ? "tab-activa" : ""} onClick={() => setSeccion("tareas")}>Tareas del hogar</button>
+      <button type="button" className={seccion === "tareas" ? "tab-activa" : ""} onClick={() => setSeccion("tareas")}>Todas las tareas</button>
       <button type="button" className={seccion === "pool" ? "tab-activa" : ""} onClick={() => setSeccion("pool")}>Pool de tareas</button>
     </div>}
 
@@ -112,8 +102,6 @@ function TareasHogar({ hogarId, usuarioId, miembros, esAdmin, realizadasInicial 
         </div>)}</div>}
       </div>
     )}
-
-    {rankingAbierto && <div className="ranking-modal-fondo" onClick={() => setRankingAbierto(false)}><div className="ranking-modal" onClick={e => e.stopPropagation()}><div className="ranking-modal-acciones"><button type="button" className="ranking-modal-cerrar" onClick={() => setRankingAbierto(false)}>×</button></div><RankingPuntos hogarId={hogarId} /></div></div>}
 
     {tareaSeleccionada && (
       <div className="perfil-modal-overlay" onClick={() => { setTareaSeleccionada(null); setModoEdicion(false); }}>

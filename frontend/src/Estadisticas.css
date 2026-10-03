@@ -1,0 +1,16 @@
+.estadisticas-page { width: 100%; max-width: none; min-height: 100vh; margin: 0; padding: 0; }
+.estadisticas-contenido { width: 100%; max-width: none; margin: 0; padding: 24px 22px; box-sizing: border-box; }
+.estadisticas-cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.estadisticas-cabecera h1 { margin: 3px 0; color: var(--domus-ink); font-size: 30px; }
+.estadisticas-cabecera p { margin: 0; color: var(--domus-muted); }
+.domus-eyebrow { color: var(--domus-purple); font-size: 12px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.ranking-puntos { margin: 0; padding: 24px; border: 1px solid var(--domus-line); border-radius: 16px; background: var(--domus-white); color: var(--domus-ink); }
+.ranking-puntos h2 { color: var(--domus-ink); }
+.ranking-valor { color: var(--domus-purple); }
+.ranking-barra-contenedor { border-color: var(--domus-line); }
+.ranking-barra { background: var(--domus-purple); }
+.ranking-nombre, .ranking-vacio { color: var(--domus-muted); }
+.ranking-error { color: #ba3c47; }
+.estadisticas-sin-hogar { padding: 28px; border: 1px solid var(--domus-line); border-radius: 14px; background: var(--domus-white); }
+.estadisticas-sin-hogar h2 { margin-top: 0; }
+@media (max-width: 720px) { .estadisticas-contenido { padding: 16px 12px 24px; } .estadisticas-cabecera h1 { font-size: 25px; } }

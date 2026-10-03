@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import BotonCerrarSesion from "./BotonCerrarSesion";
 import TareasHogar from "./TareasHogar";
+import DomusHeader from "./DomusHeader";
 import { obtenerHome, actualizarNombreHogar, actualizarIconoHogar, agregarMiembro, eliminarMiembro, actualizarRolMiembro } from "./api";
 import "./App.css";
 import "./Home.css";
 
-const ICONOS_DOMUS = ["🏠", "🏡", "🏢", "🏘️"];
+const ICONOS_DOMUS = [
+  "/wireframes/domus/domus-icon-aqua-fucsia.png",
+  "/wireframes/domus/domus-icon-verde-celeste.png",
+  "/wireframes/domus/domus-icon-rojo-gris.png",
+  "/wireframes/domus/domus-icon-lila-amarillo.png",
+];
+
+function IconoHogar({ icono, className = "" }) {
+  return icono?.startsWith("/wireframes/domus/")
+    ? <img className={className} src={icono} alt="" />
+    : <span className={className}>{icono || "🏠"}</span>;
+}
 
 function Home({ id }) {
-  const navigate = useNavigate();
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -31,8 +40,8 @@ function Home({ id }) {
     obtenerHome(id).then(setDatos).catch(e => setError(e.message)).finally(() => setCargando(false));
   }, [id]);
 
-  if (cargando) return <div className="admin-container"><h1>Domus</h1><p>Cargando...</p></div>;
-  if (!datos) return <div className="admin-container"><h1>Domus</h1><p className="mensaje-error">{error || "No se pudo cargar el Home"}</p></div>;
+  if (cargando) return <><DomusHeader active="home" /><div className="admin-container home-contenedor"><p>Cargando...</p></div></>;
+  if (!datos) return <><DomusHeader active="home" /><div className="admin-container home-contenedor"><p className="mensaje-error">{error || "No se pudo cargar el Home"}</p></div></>;
 
   const esAdmin = datos.hogar?.rol === "admin";
 
@@ -53,6 +62,12 @@ function Home({ id }) {
       setEditandoNombre(false);
     } catch (e) { setError(e.message); }
     finally { setGuardandoNombre(false); }
+  }
+
+  function cancelarEdicionNombre() {
+    setNombreHogar(datos.hogar.nombre);
+    setEditandoNombre(false);
+    setError("");
   }
 
   async function seleccionarIcono(icono) {
@@ -117,38 +132,39 @@ function Home({ id }) {
   }
 
   return <div className="admin-container home-contenedor">
-    <h1>Domus</h1>
+    <DomusHeader active="home" />
 
-    <div className="home-cabecera-completa">
+    <div className={`home-cabecera-completa ${datos.hogar ? "has-house" : "no-house"}`}>
       <div className="home-identidad">
         {datos.hogar ? <>
-          <button type="button" className="boton-hogar" disabled={!esAdmin} onClick={() => esAdmin && setModalIcono(true)} title={esAdmin ? "Editar ícono del hogar" : "Ícono del hogar"}>{datos.hogar.icono || "🏠"}</button>
+          <button type="button" className="boton-hogar" disabled={!esAdmin} onClick={() => esAdmin && setModalIcono(true)} title={esAdmin ? "Editar ícono del hogar" : "Ícono del hogar"}><IconoHogar icono={datos.hogar.icono} /></button>
           {editandoNombre ? <form className="home-editar-nombre" onSubmit={guardarNombre}>
-            <input value={nombreHogar} onChange={e => setNombreHogar(e.target.value)} maxLength={100} autoFocus />
-            <button type="submit" disabled={guardandoNombre}>Guardar</button>
-            <button type="button" onClick={() => setEditandoNombre(false)} disabled={guardandoNombre}>Cancelar</button>
-          </form> : <>
-            <span className="home-nombre-hogar">{datos.hogar.nombre}</span>
-            {esAdmin && <button type="button" onClick={iniciarEdicionNombre}>Editar</button>}
-          </>}
-        </> : <span>Aún no pertencés a un hogar</span>}
+            <input aria-label="Nombre del hogar" value={nombreHogar} onChange={e => setNombreHogar(e.target.value)} maxLength={100} autoFocus />
+            <button className="home-nombre-accion guardar" type="submit" disabled={guardandoNombre} aria-label="Guardar nombre del hogar" title="Guardar">✓</button>
+            <button className="home-nombre-accion cancelar" type="button" onClick={cancelarEdicionNombre} disabled={guardandoNombre} aria-label="Cancelar edición del nombre" title="Cancelar">×</button>
+          </form> : esAdmin
+            ? <button type="button" className="home-nombre-hogar home-nombre-hogar-activador" onClick={iniciarEdicionNombre} aria-label={`Editar nombre del hogar ${datos.hogar.nombre}`}>{datos.hogar.nombre}</button>
+            : <span className="home-nombre-hogar">{datos.hogar.nombre}</span>}
+        </> : <span>Aún no pertenecés a un hogar</span>}
       </div>
-      <div className="header-acciones">
-        <button type="button" className="boton-ranking" onClick={() => navigate("/perfil")}><span aria-hidden="true">👤</span> Mi perfil</button>
-        <BotonCerrarSesion />
-      </div>
+      {datos.hogar && <span className="home-miembros-count">{esAdmin ? "Administrador/a" : "Miembro"}</span>}
     </div>
 
-    {datos.hogar && <div className="home-rol-linea"><span className="home-rol">{esAdmin ? "Administrador/a" : "Miembro"}</span></div>}
     {error && <p className="mensaje-error">{error}</p>}
 
-    {!datos.hogar ? <div className="tareas-hogar-container"><h2>Aún no pertencés a un hogar</h2></div> : <>
-      <div className="tareas-hogar-container">
-        <div className="tareas-hogar-header"><h2>Integrantes del hogar</h2><div className="home-integrantes-acciones"><span className="badge-puntos">{datos.cantidad_integrantes} integrantes</span>{esAdmin && <button type="button" className="boton-gestionar-miembros" onClick={abrirMiembros}>Gestionar miembros</button>}</div></div>
-        <div className="lista-miembros">{datos.integrantes.map(m => <div className="miembro-item" key={m.id}><div className="miembro-avatar">{m.nombre?.charAt(0).toUpperCase() || "?"}</div><div className="miembro-info"><span className="miembro-nombre">{m.nombre}</span><span className={m.rol === "admin" ? "miembro-rol admin" : "miembro-rol"}>{m.rol === "admin" ? "Administrador/a" : "Miembro"}</span></div></div>)}</div>
+    {!datos.hogar ? <div className="tareas-hogar-container home-empty-state"><h2>Aún no pertenecés a un hogar</h2></div> : <>
+      <div className="home-overview-grid">
+        <div className="home-tasks-column">
+          <TareasHogar hogarId={datos.hogar.id} usuarioId={id} miembros={datos.integrantes} esAdmin={esAdmin} />
+        </div>
+        <section className="home-members-column">
+          <div className="home-tareas-barra home-integrantes-heading"><div className="home-integrantes-titulo"><h2>Integrantes</h2><span className="home-integrantes-count">{datos.cantidad_integrantes}</span></div></div>
+          <div className="home-members-actionrow">{esAdmin && <button type="button" className="boton-gestionar-miembros" onClick={abrirMiembros}>Editar</button>}</div>
+          <div className="tareas-hogar-container home-members-panel">
+          <div className="lista-miembros">{datos.integrantes.map(m => <div className="miembro-item" key={m.id}><div className="miembro-avatar">{m.nombre?.charAt(0).toUpperCase() || "?"}</div><div className="miembro-info"><span className="miembro-nombre">{m.nombre}</span><span className={m.rol === "admin" ? "miembro-rol admin" : "miembro-rol"}>{m.rol === "admin" ? "Administrador/a" : "Miembro"}</span></div></div>)}</div>
+          </div>
+        </section>
       </div>
-
-      <TareasHogar hogarId={datos.hogar.id} usuarioId={id} miembros={datos.integrantes} esAdmin={esAdmin} realizadasInicial={datos.cantidad_tareas_realizadas} />
     </>}
 
 
@@ -162,7 +178,7 @@ function Home({ id }) {
 
     {miembroAEliminar && <div className="modal-fondo modal-fondo-confirmacion" onClick={() => setMiembroAEliminar(null)}><div className="modal modal-confirmar-miembro" onClick={e => e.stopPropagation()}><h2>¿Seguro que querés eliminar este miembro?</h2><p>Vas a eliminar a &quot;{miembroAEliminar.nombre}&quot; del hogar.</p><div className="modal-botones"><button type="button" onClick={() => setMiembroAEliminar(null)}>Cancelar</button><button type="button" onClick={confirmarEliminarMiembro} disabled={procesandoMiembro}>Eliminar</button></div></div></div>}
 
-    {modalIcono && esAdmin && <div className="modal-fondo" onClick={() => setModalIcono(false)}><div className="modal" onClick={e => e.stopPropagation()}><h2>Elegir ícono del hogar</h2><div className="home-iconos">{ICONOS_DOMUS.map(icono => <button key={icono} type="button" disabled={guardandoIcono} onClick={() => seleccionarIcono(icono)}>{icono}</button>)}</div><div className="modal-botones"><button type="button" disabled={guardandoIcono} onClick={() => setModalIcono(false)}>Cancelar</button></div></div></div>}
+    {modalIcono && esAdmin && <div className="modal-fondo" onClick={() => setModalIcono(false)}><div className="modal" onClick={e => e.stopPropagation()}><h2>Elegir ícono del hogar</h2><div className="home-iconos">{ICONOS_DOMUS.map((icono, index) => <button className="home-icono-opcion" key={icono} type="button" disabled={guardandoIcono} onClick={() => seleccionarIcono(icono)} aria-label={`Seleccionar ícono Domus ${index + 1}`}><IconoHogar icono={icono} /></button>)}</div><div className="modal-botones"><button type="button" disabled={guardandoIcono} onClick={() => setModalIcono(false)}>Cancelar</button></div></div></div>}
   </div>;
 }
 

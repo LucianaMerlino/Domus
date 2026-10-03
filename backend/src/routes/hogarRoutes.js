@@ -647,7 +647,11 @@ router.put("/:id/icono", async (req, res) => {
             "🏠",
             "🏡",
             "🏢",
-            "🏘️"
+            "🏘️",
+            "/wireframes/domus/domus-icon-aqua-fucsia.png",
+            "/wireframes/domus/domus-icon-verde-celeste.png",
+            "/wireframes/domus/domus-icon-rojo-gris.png",
+            "/wireframes/domus/domus-icon-lila-amarillo.png"
         ];
 
         if (!Number.isInteger(hogarId) || hogarId <= 0) {

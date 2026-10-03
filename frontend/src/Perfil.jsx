@@ -9,7 +9,7 @@ import {
 } from "./api";
 
 import { guardarSesion, obtenerSesion } from "./sesion";
-import BotonCerrarSesion from "./BotonCerrarSesion";
+import DomusHeader from "./DomusHeader";
 
 import "./Perfil.css";
 
@@ -243,9 +243,10 @@ function Perfil() {
     if (cargando) {
 
         return (
-            <div className="perfil-cargando">
-                Cargando perfil...
-            </div>
+            <>
+                <DomusHeader active="profile" />
+                <div className="perfil-cargando">Cargando perfil...</div>
+            </>
         );
     }
 
@@ -256,13 +257,10 @@ function Perfil() {
     if (error && !perfil) {
 
         return (
-            <div className="perfil-page">
-
-                <p className="perfil-error">
-                    {error}
-                </p>
-
-            </div>
+            <>
+                <DomusHeader active="profile" />
+                <div className="perfil-page"><p className="perfil-error">{error}</p></div>
+            </>
         );
     }
 
@@ -276,7 +274,9 @@ function Perfil() {
 
 
     return (
-
+        <>
+        <DomusHeader active="profile" />
+        {perfil.hogar && <div className="domus-contextbar"><span aria-hidden="true">⌂</span><strong>{perfil.hogar}</strong></div>}
         <div className="perfil-page">
 
 
@@ -332,24 +332,11 @@ function Perfil() {
 
                     <div className="header-acciones">
 
-                        <button
-                            type="button"
-                            className="perfil-inicio"
-                            onClick={() => navigate("/")}
-                        >
-                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />
-                            </svg>
-                            <span>Inicio</span>
-                        </button>
-
                         <div className="perfil-rol">
 
                             {textoRol(perfil.rol)}
 
                         </div>
-
-                        <BotonCerrarSesion />
 
                     </div>
 
@@ -667,6 +654,7 @@ function Perfil() {
 
 
         </div>
+        </>
     );
 }
 
