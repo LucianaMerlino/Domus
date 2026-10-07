@@ -12,7 +12,6 @@ Domus/
 │   │   ├── config/
 │   │   │   └── database.js
 │   │   └── routes/
-│   │       ├── adminRoutes.js
 │   │       └── taskRoutes.js
 │   ├── package.json
 │   └── .env            (no se sube al repo, se crea localmente)
@@ -22,7 +21,6 @@ Domus/
 └── frontend/
     ├── src/
     │   ├── App.jsx
-    │   ├── Admin.jsx
     │   ├── api.js
     │   ├── App.css
     │   ├── index.css
@@ -120,7 +118,7 @@ Deberías ver algo así:
 Y para chequear los datos de prueba:
 
 ```bash
-psql -U postgres -d domus -c "SELECT id, nombre, email, rol FROM usuarios;"
+psql -U postgres -d domus -c "SELECT u.id, u.nombre, u.email, mh.hogar_id, mh.rol FROM usuarios u LEFT JOIN miembros_hogar mh ON mh.usuario_id = u.id;"
 ```
 
 > **Tip:** si no querés que te pida la contraseña en cada comando, podés exportarla una sola vez en la terminal (Linux/macOS):
@@ -188,7 +186,6 @@ Abrí en el navegador o probá con `curl`:
 ```bash
 curl http://localhost:3000/api/health
 curl http://localhost:3000/api/db-test
-curl http://localhost:3000/api/admins
 curl http://localhost:3000/api/tasks
 ```
 
@@ -223,14 +220,16 @@ Abrí en el navegador:
 http://localhost:5173
 ```
 
-Sin sesión te redirige a `/login`. Usuarios de prueba cargados por `seed.sql` (contraseña de todos: `1234`):
+Sin sesión te redirige a `/login`. Se ingresa con **email** y contraseña. Usuarios de prueba cargados por `seed.sql` (contraseña de todos: `1234`):
 
-| Usuario | Rol | Hogar |
+| Email | Rol | Hogar |
 |---|---|---|
-| `admin1` | admin | Hogar de prueba |
-| `admin2` | admin | Casa Belgrano |
-| `tomas`, `facu`, `mariajose`, `lucia` | integrante | Hogar de prueba |
-| `julian`, `sofia`, `bruno` | integrante | Casa Belgrano |
+| `admin1@domus.local` | admin | Hogar de prueba |
+| `admin2@domus.local` | admin | Casa Belgrano |
+| `tomas@`, `facu@`, `mariajose@`, `lucia@domus.local` | integrante | Hogar de prueba |
+| `julian@`, `sofia@`, `bruno@domus.local` | integrante | Casa Belgrano |
+
+El rol es por hogar: un usuario pertenece a un solo hogar y puede ser admin o integrante de ese hogar. El nombre de usuario se puede repetir; el email no.
 
 Los admins ven el panel del hogar y los integrantes su perfil. La sesión queda guardada en el navegador (`localStorage`, clave `domus-sesion`); para cambiar de usuario borrala desde las DevTools.
 

@@ -20,8 +20,8 @@ function validarFormulario({ nombre, descripcion, puntos }) {
         return "El título es un campo obligatorio";
     }
 
-    if (!/^[\p{L}\s'".,]+$/u.test(nombreLimpio)) {
-        return "El título solo puede contener letras, comillas, puntos y comas";
+    if (!/^[\p{L}\p{N}\s'".,]+$/u.test(nombreLimpio)) {
+        return "El título solo puede contener letras, números, comillas, puntos y comas";
     }
 
     if (descripcion.length > 500) {
@@ -40,7 +40,7 @@ function validarFormulario({ nombre, descripcion, puntos }) {
 
 // Pool de tareas del hogar: plantillas con nombre, descripción
 // y puntaje estándar que después se van a poder asignar.
-function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
+function PoolTareas({ hogarId, usuarioId, miembros = [], onTareaCreada }) {
 
     const [plantillas, setPlantillas] = useState([]);
     const [error, setError] = useState("");
@@ -138,12 +138,12 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
 
         try {
             if (plantillaEnEdicion === "nueva") {
-                const nueva = await crearPlantilla(hogarId, datos);
+                const nueva = await crearPlantilla(hogarId, datos, usuarioId);
 
                 setPlantillas((actuales) => [...actuales, nueva]);
                 setMensaje("Tarea agregada al pool");
             } else {
-                const editada = await actualizarPlantilla(plantillaEnEdicion.id, datos);
+                const editada = await actualizarPlantilla(plantillaEnEdicion.id, datos, usuarioId);
 
                 setPlantillas((actuales) =>
                     actuales.map((plantilla) =>
@@ -166,7 +166,7 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
 
     async function confirmarEliminacion() {
         try {
-            await eliminarPlantilla(plantillaAEliminar.id);
+            await eliminarPlantilla(plantillaAEliminar.id, usuarioId);
 
             setPlantillas((actuales) =>
                 actuales.filter((plantilla) => plantilla.id !== plantillaAEliminar.id)
@@ -213,8 +213,9 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
         try {
             const tareaCreada = await crearTarea({
                 hogar_id: hogarId,
+                usuarioId,
                 plantilla_id: plantillaAsignacion.id,
-                asignado_a: miembroSeleccionado,
+                asignado_id: Number(miembroSeleccionado),
                 nombre: plantillaAsignacion.nombre,
                 descripcion: plantillaAsignacion.descripcion || "",
                 puntos: plantillaAsignacion.puntos
@@ -224,7 +225,7 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
                 onTareaCreada(tareaCreada);
             }
 
-            setMensaje(`Tarea "${plantillaAsignacion.nombre}" asignada a ${miembroSeleccionado}`);
+            setMensaje(`Tarea "${plantillaAsignacion.nombre}" asignada a ${tareaCreada.asignado_a}`);
             setPlantillaAsignacion(null);
             setMiembroSeleccionado("");
             setError("");
@@ -467,7 +468,7 @@ function PoolTareas({ hogarId, miembros = [], onTareaCreada }) {
                                 >
                                     <option value="">Seleccioná un miembro</option>
                                     {miembros.map((miembro) => (
-                                        <option key={miembro.id} value={miembro.nombre}>
+                                        <option key={miembro.id} value={miembro.id}>
                                             {miembro.nombre}
                                             {miembro.rol === "admin" ? " (admin)" : ""}
                                         </option>

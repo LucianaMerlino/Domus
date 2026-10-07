@@ -11,7 +11,7 @@ function DomusHeader({ active }) {
 
       <nav className="domus-nav" aria-label="Navegación principal">
         <Link className={active === "home" ? "active" : ""} to="/">Inicio</Link>
-        <Link className={active === "stats" ? "active" : ""} to="/estadisticas">Estadísticas</Link>
+        <Link className={active === "ranking" ? "active" : ""} to="/ranking">Ranking</Link>
         <Link className={`domus-profile-link ${active === "profile" ? "active" : ""}`} to="/perfil">
           <span className="domus-user-avatar" aria-hidden="true" />
           <span>Mi perfil</span>

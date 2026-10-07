@@ -1,0 +1,16 @@
+.ranking-pagina { width: 100%; max-width: none; min-height: 100vh; margin: 0; padding: 0; }
+.ranking-pagina-contenido { width: 100%; max-width: none; margin: 0; padding: 24px 22px; box-sizing: border-box; }
+.ranking-pagina-cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.ranking-pagina-cabecera h1 { margin: 3px 0; color: var(--domus-ink); font-size: 30px; }
+.ranking-pagina-cabecera p { margin: 0; color: var(--domus-muted); }
+.domus-eyebrow { color: var(--domus-purple); font-size: 12px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.ranking-puntos { margin: 0; padding: 24px; border: 1px solid var(--domus-line); border-radius: 16px; background: var(--domus-white); color: var(--domus-ink); }
+.ranking-puntos h2 { color: var(--domus-ink); }
+.ranking-valor { color: var(--domus-purple); }
+.ranking-barra-contenedor { border-color: var(--domus-line); }
+.ranking-barra { background: var(--domus-purple); }
+.ranking-nombre, .ranking-vacio { color: var(--domus-muted); }
+.ranking-error { color: #ba3c47; }
+.ranking-pagina-sin-hogar { padding: 28px; border: 1px solid var(--domus-line); border-radius: 14px; background: var(--domus-white); }
+.ranking-pagina-sin-hogar h2 { margin-top: 0; }
+@media (max-width: 720px) { .ranking-pagina-contenido { padding: 16px 12px 24px; } .ranking-pagina-cabecera h1 { font-size: 25px; } }

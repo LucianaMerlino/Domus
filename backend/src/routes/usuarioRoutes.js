@@ -22,10 +22,7 @@ router.get("/:id/perfil", async (req, res) => {
                 u.id,
                 u.nombre,
                 u.email,
-                CASE
-                    WHEN h.id IS NULL THEN 'integrante'
-                    ELSE u.rol
-                END AS rol,
+                COALESCE(mh.rol, 'integrante') AS rol,
                 h.id AS hogar_id,
                 h.nombre AS hogar
             FROM usuarios u
@@ -47,16 +44,14 @@ router.get("/:id/perfil", async (req, res) => {
 
         const usuario = usuarioResultado.rows[0];
 
-        // Las tareas actualmente se asignan usando el nombre
-        // del usuario en tareas.asignado_a.
         const puntosResultado = await pool.query(
             `
             SELECT COALESCE(SUM(t.puntos), 0) AS puntos_acumulados
             FROM tareas t
-            WHERE t.asignado_a = $1
+            WHERE t.asignado_id = $1
               AND t.completada = TRUE
             `,
-            [usuario.nombre]
+            [usuario.id]
         );
 
         res.json({
@@ -95,8 +90,6 @@ router.get("/:id/tareas", async (req, res) => {
             });
         }
 
-        // Primero obtenemos el nombre del usuario porque
-        // actualmente tareas.asignado_a guarda ese nombre.
         const usuarioResultado = await pool.query(
             `
             SELECT id, nombre
@@ -112,11 +105,9 @@ router.get("/:id/tareas", async (req, res) => {
             });
         }
 
-        const nombreUsuario = usuarioResultado.rows[0].nombre;
-
         const estado = (req.query.estado || "").toLowerCase();
 
-        const valores = [nombreUsuario];
+        const valores = [usuarioId];
 
         let filtroEstado = "";
 
@@ -143,11 +134,13 @@ router.get("/:id/tareas", async (req, res) => {
                 t.descripcion,
                 t.puntos,
                 t.estado,
-                t.asignado_a,
+                t.asignado_id,
+                u.nombre AS asignado_a,
                 t.completada,
                 t.creado_en
             FROM tareas t
-            WHERE t.asignado_a = $1
+            LEFT JOIN usuarios u ON u.id = t.asignado_id
+            WHERE t.asignado_id = $1
             ${filtroEstado}
             ORDER BY t.id DESC
             `,
@@ -187,12 +180,10 @@ router.get("/:id/home", async (req, res) => {
                 h.id,
                 h.nombre,
                 h.icono,
-                u.rol
+                mh.rol
             FROM miembros_hogar mh
             JOIN hogares h
                 ON h.id = mh.hogar_id
-            JOIN usuarios u
-                ON u.id = mh.usuario_id
             WHERE mh.usuario_id = $1
             LIMIT 1
             `,
@@ -218,7 +209,7 @@ router.get("/:id/home", async (req, res) => {
             SELECT
                 u.id,
                 u.nombre,
-                u.rol
+                mh.rol
             FROM miembros_hogar mh
             JOIN usuarios u
                 ON u.id = mh.usuario_id
@@ -238,8 +229,10 @@ router.get("/:id/home", async (req, res) => {
                 t.puntos,
                 t.estado,
                 t.completada,
-                t.asignado_a
+                t.asignado_id,
+                u.nombre AS asignado_a
             FROM tareas t
+            LEFT JOIN usuarios u ON u.id = t.asignado_id
             WHERE t.hogar_id = $1
             ORDER BY t.id DESC
             `,

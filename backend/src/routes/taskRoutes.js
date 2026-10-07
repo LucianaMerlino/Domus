@@ -1,19 +1,78 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../config/database");
+const { esAdminDelHogar } = require("../permisos");
+const { TITULO_VALIDO, MENSAJE_TITULO_INVALIDO } = require("../validaciones");
+
+// Campos que devuelve cada tarea. asignado_a es el nombre de quien la
+// tiene asignada (para mostrar); asignado_id es quien la tiene.
+const CAMPOS_TAREA = `
+    t.id,
+    t.hogar_id,
+    t.nombre,
+    t.descripcion,
+    t.puntos,
+    t.estado,
+    t.asignado_id,
+    u.nombre AS asignado_a,
+    t.completada,
+    t.plantilla_id,
+    t.creado_en
+`;
+
+const DESDE_TAREAS = `
+    FROM tareas t
+    LEFT JOIN usuarios u ON u.id = t.asignado_id
+`;
+
+async function obtenerTarea(id) {
+    const resultado = await pool.query(
+        `SELECT ${CAMPOS_TAREA} ${DESDE_TAREAS} WHERE t.id = $1`,
+        [id]
+    );
+
+    return resultado.rows[0];
+}
+
+// Lee el id del miembro asignado: null si viene vacío, NaN si no es válido
+function leerAsignado(valor) {
+    if (valor === undefined || valor === null || valor === "") {
+        return null;
+    }
+
+    const id = Number(valor);
+
+    return Number.isInteger(id) && id > 0 ? id : NaN;
+}
+
+// Verifica que el usuario asignado pertenezca al hogar
+async function perteneceAlHogar(hogarId, usuarioId) {
+    const resultado = await pool.query(
+        `SELECT 1
+         FROM miembros_hogar
+         WHERE hogar_id = $1 AND usuario_id = $2`,
+        [hogarId, usuarioId]
+    );
+
+    return resultado.rows.length > 0;
+}
 
 // Crear una instancia de tarea a partir de una plantilla o datos directos
 router.post("/", async (req, res) => {
     try {
         const hogarId = Number(req.body.hogar_id ?? req.body.hogarId);
         const plantillaId = req.body.plantilla_id ?? req.body.plantillaId ?? null;
-        const miembroNombre = typeof req.body.asignado_a === "string"
-            ? req.body.asignado_a.trim()
-            : "";
+        const asignadoId = leerAsignado(req.body.asignado_id);
 
         if (!Number.isInteger(hogarId) || hogarId <= 0) {
             return res.status(400).json({
                 error: "El hogar indicado no es válido"
+            });
+        }
+
+        if (!(await esAdminDelHogar(hogarId, req.body.usuarioId))) {
+            return res.status(403).json({
+                error: "Solo el administrador puede crear tareas"
             });
         }
 
@@ -47,9 +106,15 @@ router.post("/", async (req, res) => {
             });
         }
 
-        if (nombre.length > 100 || !/^[\p{L}\s'".,]+$/u.test(nombre)) {
+        if (nombre.length > 100) {
             return res.status(400).json({
-                error: "El título no es válido"
+                error: "El título no puede superar los 100 caracteres"
+            });
+        }
+
+        if (!TITULO_VALIDO.test(nombre)) {
+            return res.status(400).json({
+                error: MENSAJE_TITULO_INVALIDO
             });
         }
 
@@ -66,22 +131,10 @@ router.post("/", async (req, res) => {
             });
         }
 
-        const asignadoFinal = miembroNombre !== "" ? miembroNombre : null;
-
-        if (asignadoFinal) {
-            const miembroResultado = await pool.query(
-                `SELECT 1
-                 FROM miembros_hogar m
-                 JOIN usuarios u ON u.id = m.usuario_id
-                 WHERE m.hogar_id = $1 AND u.nombre = $2`,
-                [hogarId, asignadoFinal]
-            );
-
-            if (miembroResultado.rows.length === 0) {
-                return res.status(400).json({
-                    error: "El miembro asignado no pertenece al hogar"
-                });
-            }
+        if (Number.isNaN(asignadoId) || (asignadoId && !(await perteneceAlHogar(hogarId, asignadoId)))) {
+            return res.status(400).json({
+                error: "El miembro asignado no pertenece al hogar"
+            });
         }
 
         const resultado = await pool.query(
@@ -92,32 +145,22 @@ router.post("/", async (req, res) => {
                 puntos,
                 estado,
                 completada,
-                asignado_a,
+                asignado_id,
                 plantilla_id
              )
              VALUES ($1, $2, $3, $4, 'Pendiente', FALSE, $5, $6)
-             RETURNING
-                id,
-                hogar_id,
-                nombre,
-                descripcion,
-                puntos,
-                estado,
-                asignado_a,
-                completada,
-                plantilla_id,
-                creado_en`,
+             RETURNING id`,
             [
                 hogarId,
                 nombre,
                 descripcion || null,
                 puntosNumero,
-                asignadoFinal,
+                asignadoId,
                 plantillaId
             ]
         );
 
-        res.status(201).json(resultado.rows[0]);
+        res.status(201).json(await obtenerTarea(resultado.rows[0].id));
     } catch (error) {
         console.error("Error al crear tarea:", error);
         res.status(500).json({
@@ -137,25 +180,25 @@ router.get("/", async (req, res) => {
 
         // Filtro por hogar
         if (hogar) {
-            condiciones.push(`hogar_id = $${indice}`);
+            condiciones.push(`t.hogar_id = $${indice}`);
             valores.push(hogar);
             indice++;
         }
 
         // Filtro por estado
         if (estado && estado !== "todas") {
-            condiciones.push(`estado = $${indice}`);
+            condiciones.push(`t.estado = $${indice}`);
             valores.push(estado);
             indice++;
         }
 
-        // Filtro por asignación
+        // Filtro por asignación (id del miembro o "sin_asignar")
         if (asignado && asignado !== "todos") {
             if (asignado === "sin_asignar") {
-                condiciones.push(`asignado_a IS NULL`);
+                condiciones.push(`t.asignado_id IS NULL`);
             } else {
-                condiciones.push(`asignado_a = $${indice}`);
-                valores.push(asignado);
+                condiciones.push(`t.asignado_id = $${indice}`);
+                valores.push(Number(asignado) || 0);
                 indice++;
             }
         }
@@ -165,16 +208,16 @@ router.get("/", async (req, res) => {
             : "";
 
         // Orden por puntos
-        let orderBy = "ORDER BY id DESC";
+        let orderBy = "ORDER BY t.id DESC";
         if (orden === "asc") {
-            orderBy = "ORDER BY puntos ASC";
+            orderBy = "ORDER BY t.puntos ASC";
         } else if (orden === "desc") {
-            orderBy = "ORDER BY puntos DESC";
+            orderBy = "ORDER BY t.puntos DESC";
         }
 
         const consulta = `
-            SELECT id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, completada, plantilla_id, creado_en
-            FROM tareas
+            SELECT ${CAMPOS_TAREA}
+            ${DESDE_TAREAS}
             ${where}
             ${orderBy}
         `;
@@ -193,37 +236,42 @@ router.get("/", async (req, res) => {
 
 // ======================================================
 // Marcar una tarea como realizada
+// Solo puede quien la tiene asignada o el administrador del hogar
 // ======================================================
 router.put("/:id/realizada", async (req, res) => {
     try {
         const { id } = req.params;
+        const usuarioId = Number(req.body?.usuarioId);
 
-        const resultado = await pool.query(
-            `UPDATE tareas
-             SET estado = 'Realizada',
-                 completada = TRUE
-             WHERE id = $1
-             RETURNING
-                 id,
-                 hogar_id,
-                 nombre,
-                 descripcion,
-                 puntos,
-                 estado,
-                 asignado_a,
-                 completada,
-                 plantilla_id,
-                 creado_en`,
+        const tareaResultado = await pool.query(
+            "SELECT hogar_id, asignado_id FROM tareas WHERE id = $1",
             [id]
         );
 
-        if (resultado.rows.length === 0) {
+        if (tareaResultado.rows.length === 0) {
             return res.status(404).json({
                 error: "No se encontró la tarea"
             });
         }
 
-        res.json(resultado.rows[0]);
+        const { hogar_id: hogarId, asignado_id: asignadoId } = tareaResultado.rows[0];
+        const esAsignado = asignadoId !== null && asignadoId === usuarioId;
+
+        if (!esAsignado && !(await esAdminDelHogar(hogarId, usuarioId))) {
+            return res.status(403).json({
+                error: "Solo quien tiene asignada la tarea o el administrador pueden completarla"
+            });
+        }
+
+        await pool.query(
+            `UPDATE tareas
+             SET estado = 'Realizada',
+                 completada = TRUE
+             WHERE id = $1`,
+            [id]
+        );
+
+        res.json(await obtenerTarea(id));
 
     } catch (error) {
         console.error(
@@ -241,7 +289,8 @@ router.put("/:id/realizada", async (req, res) => {
 router.put("/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, puntos, estado, asignado_a, usuarioId } = req.body;
+        const { nombre, descripcion, puntos, estado, usuarioId } = req.body;
+        const asignadoId = leerAsignado(req.body.asignado_id);
 
         if (!nombre || nombre.trim() === "") {
             return res.status(400).json({
@@ -250,9 +299,15 @@ router.put("/:id", async (req, res) => {
         }
 
         const nombreLimpio = nombre.trim();
-        if (nombreLimpio.length > 100 || !/^[\p{L}\s'".,]+$/u.test(nombreLimpio)) {
+        if (nombreLimpio.length > 100) {
             return res.status(400).json({
-                error: "El título no es válido"
+                error: "El título no puede superar los 100 caracteres"
+            });
+        }
+
+        if (!TITULO_VALIDO.test(nombreLimpio)) {
+            return res.status(400).json({
+                error: MENSAJE_TITULO_INVALIDO
             });
         }
 
@@ -294,7 +349,7 @@ router.put("/:id", async (req, res) => {
                 ON u.id = mh.usuario_id
             WHERE mh.hogar_id = $1
             AND u.id = $2
-            AND u.rol = 'admin'`,
+            AND mh.rol = 'admin'`,
             [hogarId, usuarioId]
         );
 
@@ -304,48 +359,33 @@ router.put("/:id", async (req, res) => {
             });
         }
 
-        const asignadoLimpio = typeof asignado_a === "string" && asignado_a.trim() !== ""
-            ? asignado_a.trim()
-            : null;
-
-        if (asignadoLimpio) {
-            const miembroResultado = await pool.query(
-                `SELECT 1
-                 FROM miembros_hogar m
-                 JOIN usuarios u ON u.id = m.usuario_id
-                 WHERE m.hogar_id = $1 AND u.nombre = $2`,
-                [hogarId, asignadoLimpio]
-            );
-
-            if (miembroResultado.rows.length === 0) {
-                return res.status(400).json({
-                    error: "El miembro asignado no pertenece al hogar"
-                });
-            }
+        if (Number.isNaN(asignadoId) || (asignadoId && !(await perteneceAlHogar(hogarId, asignadoId)))) {
+            return res.status(400).json({
+                error: "El miembro asignado no pertenece al hogar"
+            });
         }
 
-        const resultado = await pool.query(
+        await pool.query(
             `UPDATE tareas
              SET nombre = $1,
                  descripcion = $2,
                  puntos = $3,
                  estado = $4,
-                 asignado_a = $5,
+                 asignado_id = $5,
                  completada = $6
-             WHERE id = $7
-             RETURNING id, hogar_id, nombre, descripcion, puntos, estado, asignado_a, completada, plantilla_id, creado_en`,
+             WHERE id = $7`,
             [
                 nombreLimpio,
                 descripcion ? descripcion.trim() : null,
                 puntosNumero,
                 estado,
-                asignadoLimpio,
+                asignadoId,
                 estado === "Realizada",
                 id
             ]
         );
 
-        res.json(resultado.rows[0]);
+        res.json(await obtenerTarea(id));
     } catch (error) {
         console.error("Error al actualizar tarea:", error);
 
@@ -378,7 +418,7 @@ router.delete("/:id", async (req, res) => {
        JOIN usuarios u ON u.id = mh.usuario_id
        WHERE mh.hogar_id = $1
          AND u.id = $2
-         AND u.rol = 'admin'`,
+         AND mh.rol = 'admin'`,
       [tareaResultado.rows[0].hogar_id, usuarioId]
     );
 

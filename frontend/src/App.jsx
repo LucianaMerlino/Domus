@@ -7,7 +7,7 @@ import {
 
 import Home from "./Home";
 import Perfil from "./Perfil";
-import Estadisticas from "./Estadisticas";
+import Ranking from "./Ranking";
 import Login from "./Login";
 import { obtenerSesion } from "./sesion";
 
@@ -31,14 +31,14 @@ function PerfilRuta() {
     return <Perfil />;
 }
 
-function EstadisticasRuta() {
+function RankingRuta() {
     const sesion = obtenerSesion();
 
     if (!sesion) {
         return <Navigate to="/login" replace />;
     }
 
-    return <Estadisticas id={sesion.id} />;
+    return <Ranking id={sesion.id} />;
 }
 
 function App() {
@@ -61,8 +61,8 @@ function App() {
                 />
 
                 <Route
-                    path="/estadisticas"
-                    element={<EstadisticasRuta />}
+                    path="/ranking"
+                    element={<RankingRuta />}
                 />
 
                 <Route

@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../config/database");
+const { esAdminDelHogar } = require("../permisos");
+const { TITULO_VALIDO, MENSAJE_TITULO_INVALIDO } = require("../validaciones");
 
 // Pool de tareas del hogar: plantillas ("tareas base") con
 // nombre, descripción y puntaje estándar. Más adelante, asignar
@@ -21,8 +23,8 @@ function validarPlantilla({ nombre, descripcion, puntos } = {}) {
         return { error: "El título no puede superar los 100 caracteres" };
     }
 
-    if (!/^[\p{L}\s'".,]+$/u.test(nombreLimpio)) {
-        return { error: "El título solo puede contener letras, comillas, puntos y comas" };
+    if (!TITULO_VALIDO.test(nombreLimpio)) {
+        return { error: MENSAJE_TITULO_INVALIDO };
     }
 
     if (descripcion && descripcion.length > 500) {
@@ -67,6 +69,32 @@ function responderError(res, error, mensajePorDefecto) {
 }
 
 
+// Busca el hogar de la plantilla y verifica que el usuario lo administre.
+// Si no corresponde, responde el error y devuelve false.
+async function verificarAdminDePlantilla(req, res) {
+    const plantilla = await pool.query(
+        "SELECT hogar_id FROM plantillas_tarea WHERE id = $1",
+        [req.params.id]
+    );
+
+    if (plantilla.rows.length === 0) {
+        res.status(404).json({
+            error: "No se encontró la tarea en el pool"
+        });
+        return false;
+    }
+
+    if (!(await esAdminDelHogar(plantilla.rows[0].hogar_id, req.body?.usuarioId))) {
+        res.status(403).json({
+            error: "Solo el administrador puede modificar el pool de tareas"
+        });
+        return false;
+    }
+
+    return true;
+}
+
+
 // ======================================================
 // GET /api/hogares/:hogarId/plantillas
 // Lista el pool de tareas del hogar
@@ -103,6 +131,12 @@ router.post("/hogares/:hogarId/plantillas", async (req, res) => {
             });
         }
 
+        if (!(await esAdminDelHogar(hogarId, req.body?.usuarioId))) {
+            return res.status(403).json({
+                error: "Solo el administrador puede modificar el pool de tareas"
+            });
+        }
+
         const { error, datos } = validarPlantilla(req.body);
 
         if (error) {
@@ -130,6 +164,10 @@ router.post("/hogares/:hogarId/plantillas", async (req, res) => {
 // ======================================================
 router.put("/plantillas/:id", async (req, res) => {
     try {
+        if (!(await verificarAdminDePlantilla(req, res))) {
+            return;
+        }
+
         const { error, datos } = validarPlantilla(req.body);
 
         if (error) {
@@ -166,6 +204,10 @@ router.put("/plantillas/:id", async (req, res) => {
 // ======================================================
 router.delete("/plantillas/:id", async (req, res) => {
     try {
+        if (!(await verificarAdminDePlantilla(req, res))) {
+            return;
+        }
+
         const resultado = await pool.query(
             "DELETE FROM plantillas_tarea WHERE id = $1 RETURNING id",
             [req.params.id]

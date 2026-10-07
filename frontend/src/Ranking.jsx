@@ -4,9 +4,9 @@ import RankingPuntos from "./RankingPuntos";
 import { obtenerHome } from "./api";
 import "./App.css";
 import "./DomusVisual.css";
-import "./Estadisticas.css";
+import "./Ranking.css";
 
-function Estadisticas({ id }) {
+function Ranking({ id }) {
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState("");
 
@@ -14,8 +14,8 @@ function Estadisticas({ id }) {
     obtenerHome(id).then(setDatos).catch((fallo) => setError(fallo.message));
   }, [id]);
 
-  return <div className="admin-container estadisticas-page">
-    <DomusHeader active="stats" />
+  return <div className="admin-container ranking-pagina">
+    <DomusHeader active="ranking" />
     {datos?.hogar && <div className="home-cabecera-completa has-house">
       <div className="home-identidad">
         <span className="boton-hogar" aria-hidden="true">{datos.hogar.icono?.startsWith("/wireframes/domus/") ? <img src={datos.hogar.icono} alt="" /> : (datos.hogar.icono || "🏠")}</span>
@@ -23,13 +23,13 @@ function Estadisticas({ id }) {
       </div>
       <span className="home-miembros-count">{datos.hogar.rol === "admin" ? "Administrador/a" : "Miembro"}</span>
     </div>}
-    <main className="estadisticas-contenido">
-      <header className="estadisticas-cabecera">
-        <div><span className="domus-eyebrow">Tu hogar</span><h1>Estadísticas</h1><p>Ranking de puntos acumulados por integrante.</p></div>
+    <main className="ranking-pagina-contenido">
+      <header className="ranking-pagina-cabecera">
+        <div><span className="domus-eyebrow">Tu hogar</span><h1>Ranking</h1><p>Puntos acumulados por integrante.</p></div>
       </header>
-      {error ? <p className="mensaje-error" role="alert">{error}</p> : datos && !datos.hogar ? <section className="estadisticas-sin-hogar"><h2>Todavía no tenés un hogar</h2><p>Creá o unite a uno para ver sus estadísticas.</p></section> : datos?.hogar && <RankingPuntos hogarId={datos.hogar.id} />}
+      {error ? <p className="mensaje-error" role="alert">{error}</p> : datos && !datos.hogar ? <section className="ranking-pagina-sin-hogar"><h2>Todavía no tenés un hogar</h2><p>Creá o unite a uno para ver su ranking.</p></section> : datos?.hogar && <RankingPuntos hogarId={datos.hogar.id} />}
     </main>
   </div>;
 }
 
-export default Estadisticas;
+export default Ranking;

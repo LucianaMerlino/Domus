@@ -12,19 +12,19 @@ function Login() {
     const navigate = useNavigate();
 
     const [usuario, setUsuario] = useState("");
+    const [email, setEmail] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [error, setError] = useState("");
     const [enviando, setEnviando] = useState(false);
     const [registrando, setRegistrando] = useState(false);
-    const [mensaje, setMensaje] = useState("");
 
 
     async function iniciarSesion(event) {
 
         event.preventDefault();
 
-        if (!usuario.trim() || !contrasena) {
-            setError("Completá usuario y contraseña");
+        if (!email.trim() || !contrasena) {
+            setError("Completá email y contraseña");
             return;
         }
 
@@ -33,7 +33,7 @@ function Login() {
             setEnviando(true);
             setError("");
 
-            const datosSesion = await login(usuario.trim(), contrasena);
+            const datosSesion = await login(email.trim(), contrasena);
 
             guardarSesion(datosSesion);
             navigate("/", { replace: true });
@@ -52,18 +52,25 @@ function Login() {
     async function registrar(event) {
         event.preventDefault();
 
-        if (!usuario.trim() || !contrasena) {
-            setError("Completá usuario y contraseña");
+        if (!usuario.trim() || !email.trim() || !contrasena) {
+            setError("Completá usuario, email y contraseña");
+            return;
+        }
+
+        if (!email.includes("@")) {
+            setError("El email debe incluir un @");
             return;
         }
 
         try {
             setEnviando(true);
             setError("");
-            setMensaje("");
 
-            const resultado = await registrarUsuario(usuario.trim(), contrasena);
-            setMensaje(resultado.mensaje);
+            // El registro devuelve la sesión: queda logueado y va al home
+            const datosSesion = await registrarUsuario(usuario.trim(), email.trim(), contrasena);
+
+            guardarSesion(datosSesion);
+            navigate("/", { replace: true });
         } catch (error) {
             setError(error.message);
         } finally {
@@ -74,7 +81,6 @@ function Login() {
     function alternarModo() {
         setRegistrando(!registrando);
         setError("");
-        setMensaje("");
     }
 
 
@@ -85,13 +91,27 @@ function Login() {
 
                 <h1>Domus</h1>
 
-                <label htmlFor="usuario">{registrando ? "Nombre de usuario" : "Usuario"}</label>
+                {registrando && (
+                    <>
+                        <label htmlFor="usuario">Nombre de usuario</label>
+                        <input
+                            id="usuario"
+                            type="text"
+                            autoComplete="username"
+                            value={usuario}
+                            onChange={(event) => setUsuario(event.target.value)}
+                            required
+                        />
+                    </>
+                )}
+
+                <label htmlFor="email">Email</label>
                 <input
-                    id="usuario"
-                    type="text"
-                    autoComplete="username"
-                    value={usuario}
-                    onChange={(event) => setUsuario(event.target.value)}
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
                     required
                 />
 
@@ -99,7 +119,7 @@ function Login() {
                 <input
                     id="contrasena"
                     type="password"
-                    autoComplete="current-password"
+                    autoComplete={registrando ? "new-password" : "current-password"}
                     value={contrasena}
                     onChange={(event) => setContrasena(event.target.value)}
                     required
@@ -109,14 +129,10 @@ function Login() {
                     <p className="login-error">{error}</p>
                 )}
 
-                {mensaje && (
-                    <p className="login-success" role="status">{mensaje}</p>
-                )}
-
                 <button type="submit" disabled={enviando}>
                     {enviando
                         ? (registrando ? "Registrando..." : "Ingresando...")
-                        : (registrando ? "Registrar" : "Ingresar")}
+                        : (registrando ? "Registrarme" : "Ingresar")}
                 </button>
 
                 <button type="button" className="login-mode-button" onClick={alternarModo}>

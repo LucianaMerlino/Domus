@@ -1,15 +1,5 @@
 const API_URL = "http://localhost:3000/api";
 
-export async function obtenerAdmin(id) {
-    const respuesta = await fetch(`${API_URL}/admins/${id}`);
-
-    if (!respuesta.ok) {
-        throw new Error("No se pudo obtener el administrador");
-    }
-
-    return respuesta.json();
-}
-
 // Obtener los miembros de un hogar
 export async function obtenerMiembros(hogarId) {
     const respuesta = await fetch(`${API_URL}/hogares/${hogarId}/miembros`);
@@ -236,14 +226,15 @@ export async function obtenerTareasUsuario(id, estado = "pendiente") {
 // ======================================================
 // Marcar tarea como realizada
 // ======================================================
-export async function marcarTareaRealizada(id) {
+export async function marcarTareaRealizada(id, usuarioId) {
     const respuesta = await fetch(
         `${API_URL}/tasks/${id}/realizada`,
         {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"
-            }
+            },
+            body: JSON.stringify({ usuarioId })
         }
     );
 
@@ -353,13 +344,13 @@ export async function eliminarMiembro(hogarId, usuarioId, adminId) {
 // ======================================================
 // Iniciar sesión
 // ======================================================
-export async function login(usuario, contrasena) {
+export async function login(email, contrasena) {
     const respuesta = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ usuario, contrasena })
+        body: JSON.stringify({ email, contrasena })
     });
 
     const datos = await respuesta.json();
@@ -372,15 +363,15 @@ export async function login(usuario, contrasena) {
 }
 
 // ======================================================
-// Registrar usuario
+// Registrar usuario: devuelve los datos de la sesión
 // ======================================================
-export async function registrarUsuario(usuario, contrasena) {
+export async function registrarUsuario(usuario, email, contrasena) {
     const respuesta = await fetch(`${API_URL}/auth/registro`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ usuario, contrasena })
+        body: JSON.stringify({ usuario, email, contrasena })
     });
 
     const datos = await respuesta.json();
@@ -420,26 +411,26 @@ export function obtenerPlantillas(hogarId) {
     );
 }
 
-export function crearPlantilla(hogarId, plantilla) {
+export function crearPlantilla(hogarId, plantilla, usuarioId) {
     return pedirPlantillas(
         `${API_URL}/hogares/${hogarId}/plantillas`,
-        { method: "POST", body: JSON.stringify(plantilla) },
+        { method: "POST", body: JSON.stringify({ ...plantilla, usuarioId }) },
         "No se pudo crear la tarea en el pool"
     );
 }
 
-export function actualizarPlantilla(id, plantilla) {
+export function actualizarPlantilla(id, plantilla, usuarioId) {
     return pedirPlantillas(
         `${API_URL}/plantillas/${id}`,
-        { method: "PUT", body: JSON.stringify(plantilla) },
+        { method: "PUT", body: JSON.stringify({ ...plantilla, usuarioId }) },
         "No se pudo editar la tarea del pool"
     );
 }
 
-export function eliminarPlantilla(id) {
+export function eliminarPlantilla(id, usuarioId) {
     return pedirPlantillas(
         `${API_URL}/plantillas/${id}`,
-        { method: "DELETE" },
+        { method: "DELETE", body: JSON.stringify({ usuarioId }) },
         "No se pudo eliminar la tarea del pool"
     );
 }

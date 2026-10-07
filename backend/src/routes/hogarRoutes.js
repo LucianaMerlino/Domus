@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
         }
 
         const usuario = await pool.query(
-            `SELECT id, nombre, rol
+            `SELECT id, nombre
              FROM usuarios
              WHERE id = $1`,
             [usuarioId]
@@ -42,8 +42,6 @@ router.post("/", async (req, res) => {
                 error: "Usuario no encontrado"
             });
         }
-
-        const nombreUsuario = usuario.rows[0].nombre;
 
         const yaTieneHogar = await pool.query(
             `SELECT 1
@@ -69,26 +67,19 @@ router.post("/", async (req, res) => {
         const hogar = hogarResultado.rows[0];
 
         await pool.query(
-            `INSERT INTO miembros_hogar (hogar_id, usuario_id)
-             VALUES ($1, $2)`,
+            `INSERT INTO miembros_hogar (hogar_id, usuario_id, rol)
+             VALUES ($1, $2, 'admin')`,
             [hogar.id, usuarioId]
-        );
-
-        await pool.query(
-            `UPDATE usuarios
-             SET rol = 'admin'
-             WHERE id = $1`,
-            [usuarioId]
         );
 
         const tareasLimpias = await pool.query(
             `UPDATE tareas
-             SET asignado_a = NULL,
+             SET asignado_id = NULL,
                  estado = 'Pendiente',
                  completada = FALSE
-             WHERE asignado_a = $1
+             WHERE asignado_id = $1
              RETURNING id`,
-            [nombreUsuario]
+            [usuarioId]
         );
 
         res.status(201).json({
@@ -118,7 +109,7 @@ router.get("/:id/ranking", async (req, res) => {
              FROM miembros_hogar m
              JOIN usuarios u ON u.id = m.usuario_id
              LEFT JOIN tareas t
-                ON t.asignado_a = u.nombre
+                ON t.asignado_id = u.id
                AND t.hogar_id = m.hogar_id
                AND t.completada = TRUE
              WHERE m.hogar_id = $1
@@ -147,7 +138,7 @@ router.get("/:id/miembros", async (req, res) => {
                 u.id,
                 u.nombre,
                 u.email,
-                u.rol
+                m.rol
              FROM miembros_hogar m
              JOIN usuarios u
                 ON u.id = m.usuario_id
@@ -210,7 +201,7 @@ router.post("/:id/miembros", async (req, res) => {
         const administrador = await pool.query(
             `SELECT
                 u.id,
-                u.rol
+                m.rol
              FROM usuarios u
              JOIN miembros_hogar m
                 ON m.usuario_id = u.id
@@ -238,8 +229,7 @@ router.post("/:id/miembros", async (req, res) => {
             `SELECT
                 id,
                 nombre,
-                email,
-                rol
+                email
              FROM usuarios
              WHERE LOWER(email) = LOWER($1)
              LIMIT 1`,
@@ -255,19 +245,22 @@ router.post("/:id/miembros", async (req, res) => {
         const usuarioEncontrado = usuario.rows[0];
 
         // ------------------------------------------------
-        // Verificar si ya pertenece al hogar
+        // Verificar que no pertenezca a ningún hogar
+        // (un usuario solo puede estar en uno)
         // ------------------------------------------------
         const miembroExistente = await pool.query(
-            `SELECT id
+            `SELECT hogar_id
              FROM miembros_hogar
-             WHERE hogar_id = $1
-               AND usuario_id = $2`,
-            [hogarId, usuarioEncontrado.id]
+             WHERE usuario_id = $1
+             LIMIT 1`,
+            [usuarioEncontrado.id]
         );
 
         if (miembroExistente.rows.length > 0) {
             return res.status(409).json({
-                error: "Este usuario ya pertenece al hogar"
+                error: Number(miembroExistente.rows[0].hogar_id) === hogarId
+                    ? "Este usuario ya pertenece al hogar"
+                    : "Este usuario ya pertenece a otro hogar"
             });
         }
 
@@ -277,9 +270,10 @@ router.post("/:id/miembros", async (req, res) => {
         const nuevoMiembro = await pool.query(
             `INSERT INTO miembros_hogar (
                 hogar_id,
-                usuario_id
+                usuario_id,
+                rol
              )
-             VALUES ($1, $2)
+             VALUES ($1, $2, 'integrante')
              RETURNING id`,
             [
                 hogarId,
@@ -294,7 +288,7 @@ router.post("/:id/miembros", async (req, res) => {
             id: usuarioEncontrado.id,
             nombre: usuarioEncontrado.nombre,
             email: usuarioEncontrado.email,
-            rol: usuarioEncontrado.rol,
+            rol: "integrante",
             miembro_hogar_id: nuevoMiembro.rows[0].id
         });
 
@@ -344,7 +338,7 @@ router.put("/:id/miembros/:usuarioId/rol", async (req, res) => {
         }
 
         const administrador = await pool.query(
-            `SELECT u.id, u.rol
+            `SELECT u.id, m.rol
              FROM miembros_hogar m
              JOIN usuarios u ON u.id = m.usuario_id
              WHERE m.hogar_id = $1 AND u.id = $2`,
@@ -358,7 +352,7 @@ router.put("/:id/miembros/:usuarioId/rol", async (req, res) => {
         }
 
         const miembro = await pool.query(
-            `SELECT u.id, u.rol
+            `SELECT u.id, m.rol
              FROM miembros_hogar m
              JOIN usuarios u ON u.id = m.usuario_id
              WHERE m.hogar_id = $1 AND u.id = $2`,
@@ -378,7 +372,7 @@ router.put("/:id/miembros/:usuarioId/rol", async (req, res) => {
                 `SELECT COUNT(*)::int AS total
                  FROM miembros_hogar m
                  JOIN usuarios u ON u.id = m.usuario_id
-                 WHERE m.hogar_id = $1 AND u.rol = 'admin'`,
+                 WHERE m.hogar_id = $1 AND m.rol = 'admin'`,
                 [hogarId]
             );
 
@@ -390,11 +384,14 @@ router.put("/:id/miembros/:usuarioId/rol", async (req, res) => {
         }
 
         const resultado = await pool.query(
-            `UPDATE usuarios
+            `UPDATE miembros_hogar m
              SET rol = $1
-             WHERE id = $2
-             RETURNING id, nombre, email, rol`,
-            [rolNormalizado, usuarioId]
+             FROM usuarios u
+             WHERE u.id = m.usuario_id
+               AND m.hogar_id = $2
+               AND m.usuario_id = $3
+             RETURNING u.id, u.nombre, u.email, m.rol`,
+            [rolNormalizado, hogarId, usuarioId]
         );
 
         res.json({
@@ -436,7 +433,7 @@ router.delete("/:id/miembros/:usuarioId", async (req, res) => {
         }
 
         const administrador = await pool.query(
-            `SELECT u.id, u.rol
+            `SELECT u.id, m.rol
              FROM miembros_hogar m
              JOIN usuarios u ON u.id = m.usuario_id
              WHERE m.hogar_id = $1 AND u.id = $2`,
@@ -456,7 +453,7 @@ router.delete("/:id/miembros/:usuarioId", async (req, res) => {
         }
 
         const miembro = await pool.query(
-            `SELECT u.id, u.rol
+            `SELECT u.id, m.rol
              FROM miembros_hogar m
              JOIN usuarios u ON u.id = m.usuario_id
              WHERE m.hogar_id = $1 AND u.id = $2`,
@@ -474,7 +471,7 @@ router.delete("/:id/miembros/:usuarioId", async (req, res) => {
                 `SELECT COUNT(*)::int AS total
                  FROM miembros_hogar m
                  JOIN usuarios u ON u.id = m.usuario_id
-                 WHERE m.hogar_id = $1 AND u.rol = 'admin'`,
+                 WHERE m.hogar_id = $1 AND m.rol = 'admin'`,
                 [hogarId]
             );
 
@@ -498,40 +495,15 @@ router.delete("/:id/miembros/:usuarioId", async (req, res) => {
             });
         }
 
-        const sigueEnOtroHogar = await pool.query(
-            `SELECT 1
-             FROM miembros_hogar
-             WHERE usuario_id = $1
-             LIMIT 1`,
-            [usuarioId]
+        await pool.query(
+            `UPDATE tareas
+             SET asignado_id = NULL,
+                 estado = 'Pendiente',
+                 completada = FALSE
+             WHERE hogar_id = $1
+               AND asignado_id = $2`,
+            [hogarId, usuarioId]
         );
-
-        if (sigueEnOtroHogar.rows.length === 0) {
-            const usuarioActual = await pool.query(
-                `SELECT nombre
-                 FROM usuarios
-                 WHERE id = $1`,
-                [usuarioId]
-            );
-
-            if (usuarioActual.rows.length > 0) {
-                await pool.query(
-                    `UPDATE usuarios
-                     SET rol = 'integrante'
-                     WHERE id = $1`,
-                    [usuarioId]
-                );
-
-                await pool.query(
-                    `UPDATE tareas
-                     SET asignado_a = NULL,
-                         estado = 'Pendiente',
-                         completada = FALSE
-                     WHERE asignado_a = $1`,
-                    [usuarioActual.rows[0].nombre]
-                );
-            }
-        }
 
         res.json({
             mensaje: "Miembro eliminado del hogar",
@@ -592,7 +564,7 @@ router.put("/:id/nombre", async (req, res) => {
                 ON u.id = mh.usuario_id
             WHERE mh.hogar_id = $1
               AND u.id = $2
-              AND u.rol = 'admin'
+              AND mh.rol = 'admin'
             `,
             [hogarId, usuarioId]
         );
@@ -680,7 +652,7 @@ router.put("/:id/icono", async (req, res) => {
                 ON u.id = mh.usuario_id
             WHERE mh.hogar_id = $1
               AND u.id = $2
-              AND u.rol = 'admin'
+              AND mh.rol = 'admin'
             `,
             [hogarId, usuarioId]
         );

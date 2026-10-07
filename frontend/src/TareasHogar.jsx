@@ -12,7 +12,7 @@ function TareasHogar({ hogarId, usuarioId, miembros, esAdmin }) {
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [tareaAEliminar, setTareaAEliminar] = useState(null);
-  const [form, setForm] = useState({ nombre: "", descripcion: "", estado: "Pendiente", asignado_a: "", puntos: "" });
+  const [form, setForm] = useState({ nombre: "", descripcion: "", estado: "Pendiente", asignado_id: "", puntos: "" });
   const [error, setError] = useState("");
 
   async function cargarTareas() {
@@ -43,7 +43,7 @@ function TareasHogar({ hogarId, usuarioId, miembros, esAdmin }) {
       nombre: tareaSeleccionada.nombre || "",
       descripcion: tareaSeleccionada.descripcion || "",
       estado: tareaSeleccionada.estado || "Pendiente",
-      asignado_a: tareaSeleccionada.asignado_a || "",
+      asignado_id: tareaSeleccionada.asignado_id ? String(tareaSeleccionada.asignado_id) : "",
       puntos: String(tareaSeleccionada.puntos ?? 0)
     });
     setModoEdicion(true);
@@ -55,7 +55,7 @@ function TareasHogar({ hogarId, usuarioId, miembros, esAdmin }) {
     if (!form.nombre.trim()) return setError("El título es un campo obligatorio");
     if (!Number.isInteger(puntos) || puntos <= 0) return setError("Los puntos deben ser un número entero mayor a 0");
     try {
-      const actualizada = await actualizarTarea(tareaSeleccionada.id, { ...form, nombre: form.nombre.trim(), puntos }, usuarioId);
+      const actualizada = await actualizarTarea(tareaSeleccionada.id, { ...form, nombre: form.nombre.trim(), puntos, asignado_id: form.asignado_id ? Number(form.asignado_id) : null }, usuarioId);
       setTareaSeleccionada(actualizada);
       setModoEdicion(false);
       await cargarTareas();
@@ -84,12 +84,12 @@ function TareasHogar({ hogarId, usuarioId, miembros, esAdmin }) {
     </div>}
 
     {esAdmin && seccion === "pool" ? (
-      <PoolTareas hogarId={hogarId} miembros={miembros} onTareaCreada={() => { setSeccion("tareas"); cargarTareas(); }} />
+      <PoolTareas hogarId={hogarId} usuarioId={usuarioId} miembros={miembros} onTareaCreada={() => { setSeccion("tareas"); cargarTareas(); }} />
     ) : (
       <div className="tareas-hogar-container home-tareas-compartidas">
         <div className="filtros-tareas">
           <div className="filtro-grupo"><label>Estado</label><select value={estado} onChange={e => setEstado(e.target.value)}><option>Todos</option><option>Pendiente</option><option>Realizada</option></select></div>
-          <div className="filtro-grupo"><label>Asignada a</label><select value={asignado} onChange={e => setAsignado(e.target.value)}><option value="Todos">Todos</option><option value="sin_asignar">Sin asignar</option>{miembros.map(m => <option key={m.id} value={m.nombre}>{m.nombre}{m.rol === "admin" ? " (admin)" : ""}</option>)}</select></div>
+          <div className="filtro-grupo"><label>Asignada a</label><select value={asignado} onChange={e => setAsignado(e.target.value)}><option value="Todos">Todos</option><option value="sin_asignar">Sin asignar</option>{miembros.map(m => <option key={m.id} value={m.id}>{m.nombre}{m.rol === "admin" ? " (admin)" : ""}</option>)}</select></div>
           <div className="filtro-grupo"><label>Puntos</label><select value={orden} onChange={e => setOrden(e.target.value)}><option value="">Todos</option><option value="asc">Menor a mayor</option><option value="desc">Mayor a menor</option></select></div>
         </div>
         {error && <p className="mensaje-error">{error}</p>}
@@ -112,7 +112,7 @@ function TareasHogar({ hogarId, usuarioId, miembros, esAdmin }) {
               <div className="form-group"><label>Título</label><input value={form.nombre} onChange={e => setForm({...form, nombre:e.target.value})}/></div>
               <div className="form-group"><label>Descripción</label><textarea value={form.descripcion} onChange={e => setForm({...form, descripcion:e.target.value})}/></div>
               <div className="form-group"><label>Estado</label><select value={form.estado} onChange={e => setForm({...form, estado:e.target.value})}><option>Pendiente</option><option>Realizada</option></select></div>
-              <div className="form-group"><label>Asignada a</label><select value={form.asignado_a} onChange={e => setForm({...form, asignado_a:e.target.value})}><option value="">Sin asignar</option>{miembros.map(m => <option key={m.id} value={m.nombre}>{m.nombre}</option>)}</select></div>
+              <div className="form-group"><label>Asignada a</label><select value={form.asignado_id} onChange={e => setForm({...form, asignado_id:e.target.value})}><option value="">Sin asignar</option>{miembros.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}</select></div>
               <div className="form-group"><label>Puntos</label><input type="number" min="1" value={form.puntos} onChange={e => setForm({...form, puntos:e.target.value})}/></div>
               {error && <p className="mensaje-error">{error}</p>}
               <div className="perfil-modal-acciones">

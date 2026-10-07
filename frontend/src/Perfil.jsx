@@ -158,7 +158,8 @@ function Perfil() {
             setMensajeExito("");
 
             const tareaRealizada = await marcarTareaRealizada(
-                tareaSeleccionada.id
+                tareaSeleccionada.id,
+                id
             );
 
 

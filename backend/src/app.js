@@ -9,8 +9,6 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-const adminRoutes = require("./routes/adminRoutes");
-
 const taskRoutes = require("./routes/taskRoutes");
 
 const hogarRoutes = require("./routes/hogarRoutes");
@@ -23,7 +21,6 @@ const plantillaRoutes = require("./routes/plantillaRoutes");
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/admins", adminRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/hogares", hogarRoutes);
 app.use("/api/usuarios", usuarioRoutes);
