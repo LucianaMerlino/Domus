@@ -434,3 +434,25 @@ export function eliminarPlantilla(id, usuarioId) {
         "No se pudo eliminar la tarea del pool"
     );
 }
+
+
+// ======================================================
+// Recompensas del hogar (DOM-49 / DOM-50 / DOM-54)
+// ======================================================
+export async function obtenerRecompensas(hogarId, usuarioId) {
+    const respuesta = await fetch(`${API_URL}/hogares/${hogarId}/recompensas?usuarioId=${usuarioId}`);
+    const datos = await respuesta.json();
+    if (!respuesta.ok) throw new Error(datos.error || "No se pudieron obtener las recompensas");
+    return datos;
+}
+
+export async function crearRecompensa(hogarId, recompensa, usuarioId) {
+    const respuesta = await fetch(`${API_URL}/hogares/${hogarId}/recompensas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...recompensa, usuarioId })
+    });
+    const datos = await respuesta.json();
+    if (!respuesta.ok) throw new Error(datos.error || "No se pudo crear la recompensa");
+    return datos;
+}

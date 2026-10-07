@@ -46,10 +46,18 @@ CREATE TABLE IF NOT EXISTS asignaciones_tarea (
 CREATE TABLE IF NOT EXISTS recompensas (
     id SERIAL PRIMARY KEY,
     hogar_id INTEGER NOT NULL REFERENCES hogares(id) ON DELETE CASCADE,
-    nombre VARCHAR(150) NOT NULL,
-    descripcion TEXT,
-    costo_puntos INTEGER NOT NULL DEFAULT 0
+    nombre VARCHAR(50) NOT NULL,
+    descripcion VARCHAR(200),
+    costo_puntos INTEGER NOT NULL CHECK (costo_puntos >= 1),
+    estado VARCHAR(30) NOT NULL DEFAULT 'Por reclamar' CHECK (estado IN ('Por reclamar', 'Reclamada')),
+    asignado_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Compatibilidad con bases creadas antes de DOM-49/50/54.
+ALTER TABLE recompensas ADD COLUMN IF NOT EXISTS estado VARCHAR(30) NOT NULL DEFAULT 'Por reclamar';
+ALTER TABLE recompensas ADD COLUMN IF NOT EXISTS asignado_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL;
+ALTER TABLE recompensas ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 -- Credenciales: el login es por email + contraseña.
 -- usuarios.nombre es el nombre de usuario elegido al registrarse y es el

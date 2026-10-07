@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { obtenerTareas, actualizarTarea, eliminarTarea } from "./api";
 import PoolTareas from "./PoolTareas";
+import Recompensas from "./Recompensas";
 import "./Perfil.css";
 
 function TareasHogar({ hogarId, usuarioId, miembros, esAdmin }) {
@@ -78,13 +79,16 @@ function TareasHogar({ hogarId, usuarioId, miembros, esAdmin }) {
       </div>
     </div>
 
-    {esAdmin && <div className="tabs-admin home-tabs">
+    <div className="tabs-admin home-tabs">
       <button type="button" className={seccion === "tareas" ? "tab-activa" : ""} onClick={() => setSeccion("tareas")}>Todas las tareas</button>
-      <button type="button" className={seccion === "pool" ? "tab-activa" : ""} onClick={() => setSeccion("pool")}>Pool de tareas</button>
-    </div>}
+      {esAdmin && <button type="button" className={seccion === "pool" ? "tab-activa" : ""} onClick={() => setSeccion("pool")}>Pool de tareas</button>}
+      <button type="button" className={seccion === "recompensas" ? "tab-activa" : ""} onClick={() => setSeccion("recompensas")}>Recompensas</button>
+    </div>
 
     {esAdmin && seccion === "pool" ? (
       <PoolTareas hogarId={hogarId} usuarioId={usuarioId} miembros={miembros} onTareaCreada={() => { setSeccion("tareas"); cargarTareas(); }} />
+    ) : seccion === "recompensas" ? (
+      <Recompensas hogarId={hogarId} usuarioId={usuarioId} esAdmin={esAdmin} />
     ) : (
       <div className="tareas-hogar-container home-tareas-compartidas">
         <div className="filtros-tareas">
