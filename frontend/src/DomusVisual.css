@@ -526,3 +526,6 @@ button.home-nombre-hogar-activador { display: inline-flex; align-items: center; 
 /* Recompensas: saldo de puntos para reclamar */
 .recompensas-saldo { margin: 4px 0 10px; color: var(--domus-muted); font-size: 13px; }
 .recompensas-saldo strong { color: var(--domus-purple); }
+
+.recompensa-meta-detalle { text-align:center; font-size:18px; font-weight:800; color:#6e49d4; margin:0 0 8px; }
+.recompensa-estado-detalle { text-align:center; margin:0 0 16px; }

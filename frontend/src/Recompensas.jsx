@@ -87,17 +87,15 @@ function Recompensas({ hogarId, usuarioId, esAdmin }) {
 
     {seleccionada && <div className="perfil-modal-overlay" onClick={cerrarDetalle}>
       <div className="perfil-modal home-task-modal" onClick={e => e.stopPropagation()}>
+        <p className="recompensa-meta-detalle">Meta de {seleccionada.costo_puntos} puntos</p>
+        <p className="recompensa-estado-detalle"><span className={seleccionada.estado === "Reclamada" ? "perfil-estado realizada" : "perfil-estado pendiente"}>{seleccionada.estado || "Por reclamar"}</span></p>
         <h3>{seleccionada.nombre}</h3>
-        <div className="perfil-modal-info">
-          <span className={seleccionada.estado === "Reclamada" ? "perfil-estado realizada" : "perfil-estado pendiente"}>{seleccionada.estado}</span>
-          <span className="perfil-tarea-puntos">{seleccionada.costo_puntos} pts</span>
-        </div>
         <p className="perfil-modal-descripcion">{seleccionada.descripcion || "Sin descripción"}</p>
         {seleccionada.reclamada_por_nombre && <p className="home-modal-asignado"><strong>Reclamada por:</strong> {seleccionada.reclamada_por_nombre}</p>}
         {errorReclamo && <p className="mensaje-error" role="alert">{errorReclamo}</p>}
         <div className="perfil-modal-acciones">
           <button type="button" className="btn-cerrar" onClick={cerrarDetalle} disabled={reclamando}>Cerrar</button>
-          <button type="button" className="btn-realizar" onClick={reclamar} disabled={reclamando}>{reclamando ? "Reclamando..." : "Reclamar recompensa"}</button>
+          <button type="button" className="btn-realizar" onClick={reclamar} disabled={reclamando || seleccionada.estado === "Reclamada"}>{reclamando ? "Reclamando..." : seleccionada.estado === "Reclamada" ? "Ya reclamada" : "Reclamar recompensa"}</button>
         </div>
       </div>
     </div>}

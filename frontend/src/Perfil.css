@@ -770,3 +770,27 @@
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
+/* DOM: rediseño visual del perfil, sin alterar las acciones existentes */
+.perfil-page { background:#f7f8fc; color:#18233f; min-height:calc(100vh - 100px); padding:18px 24px 48px; font-family:inherit; }
+.perfil-redesign-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.perfil-redesign-heading small { color:#8257e5; font-size:11px; font-weight:800; letter-spacing:.08em; }
+.perfil-redesign-heading h1 { font-size:27px; margin:4px 0; color:#18233f; }
+.perfil-redesign-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:stretch; }
+.perfil-redesign-card { background:#fff; border:1px solid #e9ebf2; border-radius:16px; padding:20px; min-width:0; box-shadow:none; color:#18233f; }
+.perfil-redesign-user { display:flex; align-items:center; gap:15px; margin-bottom:22px; }
+.perfil-redesign-user .perfil-avatar { width:62px; height:62px; border-radius:12px; background:#e9f4ff; color:#408bcf; font-size:25px; }
+.perfil-redesign-user h2 { margin:0 0 4px; font-size:21px; color:#18233f; }
+.perfil-redesign-user p { margin:0; font-size:13px; color:#79849b; }
+.perfil-redesign-card h3 { font-size:14px; color:#18233f; margin:16px 0 10px; }
+.perfil-redesign-card > h2 { color:#18233f; font-size:16px; margin:0 0 14px; }
+.perfil-redesign-dato { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #eff0f5; font-size:13px; }
+.perfil-redesign-dato span { color:#79849b; } .perfil-redesign-dato strong { color:#18233f; text-align:right; overflow-wrap:anywhere; }
+.perfil-redesign-card .perfil-controles-tareas { display:flex; gap:8px; margin:12px 0; }
+.perfil-redesign-card .perfil-controles-tareas input, .perfil-redesign-card .perfil-controles-tareas select { min-width:0; max-width:100%; padding:8px; border:1px solid #e8eaf1; border-radius:8px; background:white; color:#18233f; }
+.perfil-redesign-card .perfil-tarea { background:#fff; border:0; border-bottom:1px solid #f0f1f5; box-shadow:none; color:#18233f; border-radius:0; width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 0; text-align:left; }
+.perfil-redesign-card .perfil-tarea-nombre { margin:0; font-size:13px; font-weight:700; color:#18233f; }
+.perfil-redesign-card .perfil-tarea-info { display:flex; align-items:center; gap:8px; }
+.perfil-redesign-card .perfil-tarea-puntos { color:#79849b; font-size:12px; }
+.perfil-cerrar-superior .boton-cerrar-sesion { color:#79849b; }
+@media(max-width:760px) { .perfil-page {padding:16px;} .perfil-redesign-grid {grid-template-columns:1fr;} .perfil-redesign-card {padding:16px;} }

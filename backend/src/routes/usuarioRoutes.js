@@ -45,6 +45,11 @@ router.get("/:id/perfil", async (req, res) => {
 
         const usuario = usuarioResultado.rows[0];
 
+        const integrantes = usuario.hogar_id ? await pool.query(
+            "SELECT COUNT(*)::int AS total FROM miembros_hogar WHERE hogar_id = $1",
+            [usuario.hogar_id]
+        ) : null;
+
         const puntos = await puntosDelUsuario(usuario.id);
 
         res.json({
@@ -54,6 +59,7 @@ router.get("/:id/perfil", async (req, res) => {
             rol: usuario.rol,
             hogar_id: usuario.hogar_id,
             hogar: usuario.hogar,
+            total_integrantes: integrantes?.rows[0]?.total ?? 0,
             puntos_acumulados: puntos.ganados,
             puntos_disponibles: puntos.disponibles
         });

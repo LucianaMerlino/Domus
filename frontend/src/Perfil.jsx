@@ -231,206 +231,23 @@ function Perfil() {
         <div className="perfil-page">
 
 
-            {/* =================================================
-                TARJETA PRINCIPAL DEL PERFIL
-                ================================================= */}
-
-            <section className="perfil-header">
-
-
-                {/* Parte superior */}
-
-                <div className="perfil-header-top">
-
-
-                    {/* Usuario */}
-
-                    <div className="perfil-user">
-
-
-                        {/* Avatar */}
-
-                        <div className="perfil-avatar">
-
-                            {perfil.nombre
-                                ? perfil.nombre
-                                    .charAt(0)
-                                    .toUpperCase()
-                                : "U"}
-
-                        </div>
-
-
-                        {/* Nombre + hogar */}
-
-                        <div>
-
-                            <h1 className="perfil-nombre">
-                                {perfil.nombre}
-                            </h1>
-
-                            <p className="perfil-hogar">
-                                Hogar:{" "}
-                                {perfil.hogar || "Sin hogar"}
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    {/* Rol + cerrar sesión */}
-
-                    <div className="header-acciones">
-
-                        <div className="perfil-rol">
-
-                            {textoRol(perfil.rol)}
-
-                        </div>
-
-                    </div>
-
-
-                </div>
-
-
-                {/* =================================================
-                    PUNTOS
-                    ================================================= */}
-
-                <div className="perfil-puntos">
-
-                    <p className="perfil-puntos-label">
-                        Puntos ganados
-                    </p>
-
-                    <p className="perfil-puntos-valor">
-                        {perfil.puntos_acumulados || 0}
-                    </p>
-
-                </div>
-
-
-            </section>
-
-
-
-            {/* =================================================
-                TAREAS DEL USUARIO
-                ================================================= */}
-
-            <section className="perfil-tareas">
-
-
-                <h2>
-                    Mis tareas
-                </h2>
-
-                <div className="perfil-controles-tareas">
-                    <div>
-                        <label className="perfil-busqueda-label" htmlFor="buscar-tarea-perfil">
-                            Buscar tarea
-                        </label>
-                        <input
-                            id="buscar-tarea-perfil"
-                            className="perfil-busqueda-input"
-                            type="search"
-                            value={busquedaTareas}
-                            onChange={(event) => setBusquedaTareas(event.target.value)}
-                            placeholder="Ingresá el nombre o parte del nombre"
-                        />
-                    </div>
-                    <div className="perfil-filtro-orden">
-                        <label htmlFor="orden-tareas-perfil">Puntos</label>
-                        <select
-                            id="orden-tareas-perfil"
-                            value={ordenTareas}
-                            onChange={(event) => setOrdenTareas(event.target.value)}
-                        >
-                            <option value="">Todos</option>
-                            <option value="asc">Menor a mayor</option>
-                            <option value="desc">Mayor a menor</option>
-                        </select>
-                    </div>
-                </div>
-
-                {tareasOrdenadas.length === 0 ? (
-
-                    /* Estado vacío */
-
-                    <div className="perfil-vacio">
-
-                        {busquedaTareas.trim() ? "No se encontraron tareas relacionadas" : "No tenés tareas asignadas"}
-
-                    </div>
-
-                ) : (
-
-                    /* Lista de tareas */
-
-                    <div className="perfil-lista-tareas">
-
-
-                        {tareasOrdenadas.map((tarea) => (
-
-                            <button
-                                type="button"
-                                className="perfil-tarea"
-                                key={tarea.id}
-                                onClick={() =>
-                                    abrirDetalle(tarea)
-                                }
-                            >
-
-
-                                {/* Nombre de la tarea */}
-
-                                <p className="perfil-tarea-nombre">
-
-                                    {tarea.nombre}
-
-                                </p>
-
-
-                                {/* Estado + puntos */}
-
-                                <div className="perfil-tarea-info">
-
-
-                                    <span
-                                        className={claseEstado(
-                                            tarea.estado
-                                        )}
-                                    >
-
-                                        {tarea.estado || "pendiente"}
-
-                                    </span>
-
-
-                                    <span className="perfil-tarea-puntos">
-
-                                        {tarea.puntos} pts
-
-                                    </span>
-
-
-                                </div>
-
-
-                            </button>
-
-                        ))}
-
-
-                    </div>
-
-                )}
-
-
-            </section>
-
+            <div className="perfil-redesign-heading"><div><small>TU CUENTA</small><h1>Mi perfil</h1></div></div>
+            <div className="perfil-redesign-grid">
+              <section className="perfil-redesign-card perfil-datos-card">
+                <div className="perfil-redesign-user"><div className="perfil-avatar">{perfil.nombre?.charAt(0).toUpperCase() || "U"}</div><div><h2>{perfil.nombre}</h2><p>{textoRol(perfil.rol)} · {perfil.hogar || "Sin hogar"}</p></div></div>
+                <h3>Datos personales</h3>
+                <div className="perfil-redesign-dato"><span>Correo electrónico</span><strong>{perfil.email || "Sin correo"}</strong></div>
+                <div className="perfil-redesign-dato"><span>Hogar</span><strong>{perfil.hogar || "Sin hogar"}</strong></div>
+                <div className="perfil-redesign-dato"><span>Integrantes</span><strong>{perfil.total_integrantes != null ? `${perfil.total_integrantes} personas` : "—"}</strong></div>
+              </section>
+              <section className="perfil-redesign-card perfil-tareas">
+                <h2>Puntos y tareas pendientes</h2>
+                <div className="perfil-redesign-dato"><span>Puntos ganados</span><strong>{perfil.puntos_acumulados || 0} pts</strong></div>
+                <h3>Tareas pendientes</h3>
+                <div className="perfil-controles-tareas"><input aria-label="Buscar tarea" type="search" value={busquedaTareas} onChange={e => setBusquedaTareas(e.target.value)} placeholder="Buscar tarea"/><select aria-label="Ordenar tareas por puntos" value={ordenTareas} onChange={e => setOrdenTareas(e.target.value)}><option value="">Orden original</option><option value="asc">Menor a mayor</option><option value="desc">Mayor a menor</option></select></div>
+                {tareasOrdenadas.length === 0 ? <p className="perfil-vacio">{busquedaTareas.trim() ? "No se encontraron tareas relacionadas" : "No tenés tareas asignadas"}</p> : <div className="perfil-lista-tareas">{tareasOrdenadas.map(tarea => <button type="button" className="perfil-tarea" key={tarea.id} onClick={() => abrirDetalle(tarea)}><span className="perfil-tarea-nombre">{tarea.nombre}</span><span className="perfil-tarea-info"><span className={claseEstado(tarea.estado)}>{tarea.estado || "Pendiente"}</span><span className="perfil-tarea-puntos">{tarea.puntos} pts</span></span></button>)}</div>}
+              </section>
+            </div>
 
             {/* =================================================
                 ERROR
