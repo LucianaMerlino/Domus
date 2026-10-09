@@ -1,22 +1,18 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import {
-    crearHogar,
     obtenerPerfil,
     obtenerTareasUsuario,
     marcarTareaRealizada
 } from "./api";
 
-import { guardarSesion, obtenerSesion } from "./sesion";
+import { obtenerSesion } from "./sesion";
 import DomusHeader from "./DomusHeader";
 
 import "./Perfil.css";
 
 
 function Perfil() {
-    const navigate = useNavigate();
-
     const sesion = obtenerSesion();
     const id = sesion?.id;
 
@@ -28,9 +24,6 @@ function Perfil() {
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
     const [mensajeExito, setMensajeExito] = useState("");
-    const [mostrarFormularioHogar, setMostrarFormularioHogar] = useState(false);
-    const [nombreHogar, setNombreHogar] = useState("");
-    const [creandoHogar, setCreandoHogar] = useState(false);
 
 
     useEffect(() => {
@@ -102,49 +95,6 @@ function Perfil() {
     function cerrarDetalle() {
         setTareaSeleccionada(null);
     }
-
-    async function crearNuevoHogar(event) {
-        event.preventDefault();
-
-        const nombre = nombreHogar.trim();
-
-        if (!nombre) {
-            setError("El nombre del hogar es obligatorio");
-            return;
-        }
-
-        try {
-            setCreandoHogar(true);
-            setError("");
-
-            const hogarCreado = await crearHogar(id, nombre);
-            const sesionActual = obtenerSesion();
-
-            guardarSesion({
-                ...sesionActual,
-                rol: "admin",
-                hogar_id: hogarCreado.id,
-                hogar: hogarCreado.nombre
-            });
-
-            setPerfil((perfilActual) => ({
-                ...perfilActual,
-                rol: "admin",
-                hogar_id: hogarCreado.id,
-                hogar: hogarCreado.nombre
-            }));
-
-            setMostrarFormularioHogar(false);
-            setNombreHogar("");
-            navigate("/", { replace: true });
-
-        } catch (error) {
-            setError(error.message);
-        } finally {
-            setCreandoHogar(false);
-        }
-    }
-
 
     async function realizarTarea() {
 
@@ -365,58 +315,6 @@ function Perfil() {
             </section>
 
 
-            {!perfil.hogar && (
-                <section className="perfil-crear-hogar">
-                    {!mostrarFormularioHogar ? (
-                        <button
-                            type="button"
-                            className="boton-agregar-miembro"
-                            onClick={() => setMostrarFormularioHogar(true)}
-                        >
-                            Crear hogar
-                        </button>
-                    ) : (
-                        <form onSubmit={crearNuevoHogar} className="form-agregar-miembro">
-                            <label htmlFor="nombre-hogar">Nombre del hogar</label>
-                            <input
-                                id="nombre-hogar"
-                                type="text"
-                                value={nombreHogar}
-                                onChange={(event) => setNombreHogar(event.target.value)}
-                                maxLength={100}
-                                autoFocus
-                                placeholder="Mi hogar"
-                            />
-
-                            {error && (
-                                <p className="mensaje-error-miembro">{error}</p>
-                            )}
-
-                            <div className="acciones-agregar-miembro">
-                                <button
-                                    type="button"
-                                    className="boton-cancelar-miembro"
-                                    onClick={() => {
-                                        setMostrarFormularioHogar(false);
-                                        setNombreHogar("");
-                                        setError("");
-                                    }}
-                                    disabled={creandoHogar}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="boton-confirmar-miembro"
-                                    disabled={creandoHogar}
-                                >
-                                    {creandoHogar ? "Creando..." : "Confirmar"}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </section>
-            )}
 
             {/* =================================================
                 TAREAS DEL USUARIO

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import TareasHogar from "./TareasHogar";
 import DomusHeader from "./DomusHeader";
-import { obtenerHome, actualizarNombreHogar, actualizarIconoHogar, agregarMiembro, eliminarMiembro, actualizarRolMiembro } from "./api";
+import { obtenerHome, crearHogar, actualizarNombreHogar, actualizarIconoHogar, agregarMiembro, eliminarMiembro, actualizarRolMiembro } from "./api";
+import { guardarSesion, obtenerSesion } from "./sesion";
 import "./App.css";
 import "./Home.css";
 
@@ -35,6 +36,10 @@ function Home({ id }) {
   const [modoPermisos, setModoPermisos] = useState(false);
   const [rolesPendientes, setRolesPendientes] = useState({});
   const [miembroAEliminar, setMiembroAEliminar] = useState(null);
+  const [modalCrearHogar, setModalCrearHogar] = useState(false);
+  const [nombreNuevoHogar, setNombreNuevoHogar] = useState("");
+  const [errorCrearHogar, setErrorCrearHogar] = useState("");
+  const [creandoHogar, setCreandoHogar] = useState(false);
 
   useEffect(() => {
     obtenerHome(id).then(setDatos).catch(e => setError(e.message)).finally(() => setCargando(false));
@@ -62,6 +67,27 @@ function Home({ id }) {
       setEditandoNombre(false);
     } catch (e) { setError(e.message); }
     finally { setGuardandoNombre(false); }
+  }
+
+  function abrirCrearHogar() {
+    setNombreNuevoHogar("");
+    setErrorCrearHogar("");
+    setModalCrearHogar(true);
+  }
+
+  async function crearNuevoHogar(event) {
+    event.preventDefault();
+    const nombre = nombreNuevoHogar.trim();
+    if (!nombre) return setErrorCrearHogar("El nombre del hogar es obligatorio");
+    try {
+      setCreandoHogar(true);
+      setErrorCrearHogar("");
+      const hogarCreado = await crearHogar(id, nombre);
+      guardarSesion({ ...obtenerSesion(), rol: "admin", hogar_id: hogarCreado.id, hogar: hogarCreado.nombre });
+      setDatos(await obtenerHome(id));
+      setModalCrearHogar(false);
+    } catch (e) { setErrorCrearHogar(e.message); }
+    finally { setCreandoHogar(false); }
   }
 
   function cancelarEdicionNombre() {
@@ -152,7 +178,12 @@ function Home({ id }) {
 
     {error && <p className="mensaje-error">{error}</p>}
 
-    {!datos.hogar ? <div className="tareas-hogar-container home-empty-state"><h2>Aún no pertenecés a un hogar</h2></div> : <>
+    {!datos.hogar ? <section className="home-empty-state">
+      <span className="domus-eyebrow">Tu espacio empieza acá</span>
+      <h1>Organicen la casa en equipo</h1>
+      <p>Creá un hogar e invitá a quienes viven con vos para repartir tareas, sumar puntos y llevar todo al día.</p>
+      <button type="button" className="home-crear-hogar" onClick={abrirCrearHogar}><span aria-hidden="true">+</span> Crear un hogar</button>
+    </section> : <>
       <div className="home-overview-grid">
         <div className="home-tasks-column">
           <TareasHogar hogarId={datos.hogar.id} usuarioId={id} miembros={datos.integrantes} esAdmin={esAdmin} />
@@ -179,6 +210,13 @@ function Home({ id }) {
     {miembroAEliminar && <div className="modal-fondo modal-fondo-confirmacion" onClick={() => setMiembroAEliminar(null)}><div className="modal modal-confirmar-miembro" onClick={e => e.stopPropagation()}><h2>¿Seguro que querés eliminar este miembro?</h2><p>Vas a eliminar a &quot;{miembroAEliminar.nombre}&quot; del hogar.</p><div className="modal-botones"><button type="button" onClick={() => setMiembroAEliminar(null)}>Cancelar</button><button type="button" onClick={confirmarEliminarMiembro} disabled={procesandoMiembro}>Eliminar</button></div></div></div>}
 
     {modalIcono && esAdmin && <div className="modal-fondo" onClick={() => setModalIcono(false)}><div className="modal" onClick={e => e.stopPropagation()}><h2>Elegir ícono del hogar</h2><div className="home-iconos">{ICONOS_DOMUS.map((icono, index) => <button className="home-icono-opcion" key={icono} type="button" disabled={guardandoIcono} onClick={() => seleccionarIcono(icono)} aria-label={`Seleccionar ícono Domus ${index + 1}`}><IconoHogar icono={icono} /></button>)}</div><div className="modal-botones"><button type="button" disabled={guardandoIcono} onClick={() => setModalIcono(false)}>Cancelar</button></div></div></div>}
+
+    {modalCrearHogar && <div className="modal-fondo" onClick={() => !creandoHogar && setModalCrearHogar(false)}><div className="modal modal-crear-hogar" onClick={e => e.stopPropagation()}><h2>Crear un hogar</h2><form onSubmit={crearNuevoHogar}>
+      <label htmlFor="nombre-nuevo-hogar">Nombre del hogar</label>
+      <input id="nombre-nuevo-hogar" value={nombreNuevoHogar} onChange={e => setNombreNuevoHogar(e.target.value)} maxLength={100} placeholder="Mi hogar" autoFocus />
+      {errorCrearHogar && <p className="mensaje-error">{errorCrearHogar}</p>}
+      <div className="modal-botones"><button type="button" className="boton-cancelar-miembro" disabled={creandoHogar} onClick={() => setModalCrearHogar(false)}>Cancelar</button><button type="submit" className="boton-confirmar-miembro" disabled={creandoHogar}>{creandoHogar ? "Creando..." : "Crear hogar"}</button></div>
+    </form></div></div>}
   </div>;
 }
 

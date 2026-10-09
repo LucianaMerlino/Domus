@@ -3,7 +3,6 @@
 .ranking-pagina-cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .ranking-pagina-cabecera h1 { margin: 3px 0; color: var(--domus-ink); font-size: 30px; }
 .ranking-pagina-cabecera p { margin: 0; color: var(--domus-muted); }
-.domus-eyebrow { color: var(--domus-purple); font-size: 12px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
 .ranking-puntos { margin: 0; padding: 24px; border: 1px solid var(--domus-line); border-radius: 16px; background: var(--domus-white); color: var(--domus-ink); }
 .ranking-puntos h2 { color: var(--domus-ink); }
 .ranking-valor { color: var(--domus-purple); }

@@ -204,26 +204,49 @@ button.home-nombre-hogar-activador { display: inline-flex; align-items: center; 
   box-sizing: border-box;
 }
 .home-tasks-column, .home-members-column { min-width: 0; }
+.domus-eyebrow { color: var(--domus-purple); font-size: 12px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+
+/* Home sin hogar: invitación a crear uno */
 .home-empty-state {
-  width: min(calc(100% - 40px), 620px);
-  min-height: 260px;
-  margin: clamp(28px, 9vh, 90px) auto 0;
-  display: grid;
-  place-content: center;
+  width: min(calc(100% - 32px), 540px);
+  margin: clamp(48px, 18vh, 180px) auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 .home-empty-state::before {
   content: "⌂";
-  width: 62px;
-  height: 62px;
+  width: 72px;
+  height: 72px;
   display: grid;
   place-items: center;
-  margin: 0 auto 14px;
-  border-radius: 20px;
+  margin: 0 0 24px;
+  border-radius: 22px;
   background: var(--domus-teal-pale);
   color: var(--domus-teal);
   font-size: 30px;
 }
+.home-empty-state h1 { margin: 10px 0 14px; font-size: clamp(24px, 4vw, 32px); font-weight: 800; line-height: 1.2; }
+.home-empty-state p { max-width: 520px; margin: 0 0 22px; font-size: 16px; line-height: 1.6; }
+.home-crear-hogar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--domus-purple);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.home-crear-hogar:hover { background: #6d47d9; }
+.modal-crear-hogar form { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.modal-crear-hogar label { color: var(--domus-ink); font-size: 14px; }
+.modal-crear-hogar input { padding: 10px 12px; border: 1px solid var(--domus-line); border-radius: 8px; }
+.modal-crear-hogar .modal-botones { margin-top: 10px; }
 
 /* Panels, task tabs, filters, and task rows */
 .tareas-hogar-container {
@@ -341,7 +364,7 @@ button.home-nombre-hogar-activador { display: inline-flex; align-items: center; 
   color: var(--domus-ink);
   font-family: inherit;
 }
-.perfil-header, .perfil-tareas, .perfil-crear-hogar {
+.perfil-header, .perfil-tareas {
   max-width: none;
   margin-left: auto;
   margin-right: auto;
@@ -370,13 +393,6 @@ button.home-nombre-hogar-activador { display: inline-flex; align-items: center; 
 }
 .perfil-puntos-label { margin: 0; color: var(--domus-muted); font-size: 12px; }
 .perfil-puntos-valor { margin: 0; color: var(--domus-purple); font-size: 22px; font-weight: 740; }
-.perfil-crear-hogar {
-  max-width: 1440px;
-  margin: 14px auto 0;
-  padding: 14px 18px;
-}
-.perfil-crear-hogar .boton-agregar-miembro { border: 0; border-radius: 9px; background: var(--domus-purple); color: #fff; font-weight: 650; }
-.perfil-crear-hogar .form-agregar-miembro { max-width: 480px; margin: auto; }
 .perfil-tareas { margin-top: 14px; padding: 18px 20px; }
 .perfil-tareas h2 { margin: 0 0 12px; color: var(--domus-ink); font-size: 17px; font-weight: 690; }
 .perfil-controles-tareas { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 12px; align-items: end; }
