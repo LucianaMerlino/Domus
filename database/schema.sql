@@ -59,6 +59,11 @@ ALTER TABLE recompensas ADD COLUMN IF NOT EXISTS estado VARCHAR(30) NOT NULL DEF
 ALTER TABLE recompensas ADD COLUMN IF NOT EXISTS asignado_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL;
 ALTER TABLE recompensas ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
+-- Quién reclamó la recompensa y cuándo (DOM-53). Al reclamarla se gastan
+-- sus puntos: el saldo es lo ganado en tareas menos lo gastado en recompensas.
+ALTER TABLE recompensas ADD COLUMN IF NOT EXISTS reclamada_por INTEGER REFERENCES usuarios(id) ON DELETE SET NULL;
+ALTER TABLE recompensas ADD COLUMN IF NOT EXISTS reclamada_en TIMESTAMP;
+
 -- Credenciales: el login es por email + contraseña.
 -- usuarios.nombre es el nombre de usuario elegido al registrarse y es el
 -- que se muestra en la app. Se puede repetir; el email no.

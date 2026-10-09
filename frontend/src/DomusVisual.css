@@ -472,6 +472,7 @@ button.home-nombre-hogar-activador { display: inline-flex; align-items: center; 
 .modal-crear select, .modal-detalle select, .form-group input, .form-group textarea, .modal input, .modal select, .perfil-modal input, .perfil-modal select, .perfil-modal textarea, select, option { color-scheme: light; border-color: var(--domus-line); border-radius: 8px; background-color: var(--domus-white); color: var(--domus-ink); }
 .modal-crear select, .modal-detalle select, .form-group input, .form-group textarea, .modal input, .modal select, .perfil-modal input, .perfil-modal select, .perfil-modal textarea, select { border-style: solid; }
 .modal-miembros, .modal-miembros p, .modal-miembros label, .modal-miembros .miembro-nombre, .modal-miembros .miembro-rol, .perfil-modal h3, .perfil-modal p { color: var(--domus-ink); }
+.perfil-modal .mensaje-error { color: #e5484d; font-weight: 600; }
 .modal-miembros-header { border-radius: 14px 14px 0 0; }
 .cerrar-modal-miembros { color: var(--domus-muted); }
 .cerrar-modal-miembros:hover { background: var(--domus-purple-pale); color: var(--domus-purple); }
@@ -521,3 +522,7 @@ button.home-nombre-hogar-activador { display: inline-flex; align-items: center; 
   .perfil-tarea { align-items: flex-start; flex-direction: column; gap: 7px; }
   .login-card { padding: 23px; }
 }
+
+/* Recompensas: saldo de puntos para reclamar */
+.recompensas-saldo { margin: 4px 0 10px; color: var(--domus-muted); font-size: 13px; }
+.recompensas-saldo strong { color: var(--domus-purple); }

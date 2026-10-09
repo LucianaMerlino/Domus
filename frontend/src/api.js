@@ -446,6 +446,18 @@ export async function obtenerRecompensas(hogarId, usuarioId) {
     return datos;
 }
 
+// Reclamar una recompensa (DOM-53): gasta los puntos del usuario
+export async function reclamarRecompensa(id, usuarioId) {
+    const respuesta = await fetch(`${API_URL}/recompensas/${id}/reclamar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuarioId })
+    });
+    const datos = await respuesta.json();
+    if (!respuesta.ok) throw new Error(datos.error || "No se pudo reclamar la recompensa");
+    return datos;
+}
+
 export async function crearRecompensa(hogarId, recompensa, usuarioId) {
     const respuesta = await fetch(`${API_URL}/hogares/${hogarId}/recompensas`, {
         method: "POST",

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../config/database");
+const { puntosDelUsuario } = require("../puntos");
 
 // ======================================================
 // GET /api/usuarios/:id/perfil
@@ -44,15 +45,7 @@ router.get("/:id/perfil", async (req, res) => {
 
         const usuario = usuarioResultado.rows[0];
 
-        const puntosResultado = await pool.query(
-            `
-            SELECT COALESCE(SUM(t.puntos), 0) AS puntos_acumulados
-            FROM tareas t
-            WHERE t.asignado_id = $1
-              AND t.completada = TRUE
-            `,
-            [usuario.id]
-        );
+        const puntos = await puntosDelUsuario(usuario.id);
 
         res.json({
             id: usuario.id,
@@ -61,9 +54,8 @@ router.get("/:id/perfil", async (req, res) => {
             rol: usuario.rol,
             hogar_id: usuario.hogar_id,
             hogar: usuario.hogar,
-            puntos_acumulados: Number(
-                puntosResultado.rows[0].puntos_acumulados
-            )
+            puntos_acumulados: puntos.ganados,
+            puntos_disponibles: puntos.disponibles
         });
 
     } catch (error) {
